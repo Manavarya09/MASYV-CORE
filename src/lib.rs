@@ -1,6 +1,7 @@
 mod ai;
 mod commands;
 mod config;
+mod output;
 mod plugins;
 mod system;
 mod ui;
@@ -10,6 +11,7 @@ use commands::{parse_file_command, parse_network_command, parse_system_command};
 use commands::{AliasManager, CommandInput, EnvManager};
 use config::AppConfig;
 use eframe::egui;
+use output::OutputFormatter;
 use plugins::{FileManagerPlugin, NetworkToolsPlugin, PluginRegistry, ProcessManagerPlugin};
 use system::SystemStats;
 use ui::{Theme, UiState};
@@ -27,6 +29,7 @@ pub struct HeliosApp {
     plugin_registry: PluginRegistry,
     alias_manager: AliasManager,
     env_manager: EnvManager,
+    output_formatter: OutputFormatter,
 }
 
 impl Default for HeliosApp {
@@ -56,6 +59,7 @@ impl Default for HeliosApp {
             plugin_registry,
             alias_manager,
             env_manager,
+            output_formatter: OutputFormatter::new(),
         }
     }
 }
@@ -846,6 +850,64 @@ impl HeliosApp {
                     } else {
                         self.output_messages.push("Usage: env [list|get <var>|set <var> <val>|unset <var>|search <pattern>|path|expand <text>]".to_string());
                     }
+                }
+            }
+            Some(&"format") | Some(&"output") => {
+                let args: Vec<&str> = parts[1..].iter().copied().collect();
+
+                if args.is_empty() || args[0] == "show" {
+                    self.output_messages.push(format!(
+                        "Current format: {:?}",
+                        self.output_formatter.format
+                    ));
+                } else if args[0] == "set" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: format set <plain|json|table|markdown>".to_string());
+                    } else {
+                        if let Some(fmt) = output::OutputFormat::from_str(args[1]) {
+                            self.output_formatter.set_format(fmt.clone());
+                            self.output_messages
+                                .push(format!("Output format set to: {:?}", fmt));
+                        } else {
+                            self.output_messages.push(
+                                "Invalid format. Use: plain, json, table, markdown".to_string(),
+                            );
+                        }
+                    }
+                } else if args[0] == "demo" {
+                    self.output_messages.push("Format Demo:".to_string());
+                    let test_data = r#"{"name": "HELIOS", "version": "0.2.0", "features": ["AI", "Plugins", "Themes"]}"#;
+                    self.output_messages.push(format!("Plain: {}", test_data));
+                    self.output_messages.push("".to_string());
+                    self.output_messages.push("JSON:".to_string());
+                    self.output_messages
+                        .push(self.output_formatter.format_output(test_data));
+                    self.output_messages.push("".to_string());
+                    self.output_messages.push("Table:".to_string());
+                    self.output_messages.push(
+                        self.output_formatter
+                            .format_output("item1: value1\nitem2: value2\nitem3: value3"),
+                    );
+                } else if args[0] == "color" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: format color <on|off>".to_string());
+                    } else if args[1] == "on" {
+                        self.output_formatter.color_enabled = true;
+                        self.output_messages
+                            .push("Color output enabled.".to_string());
+                    } else if args[1] == "off" {
+                        self.output_formatter.color_enabled = false;
+                        self.output_messages
+                            .push("Color output disabled.".to_string());
+                    } else {
+                        self.output_messages
+                            .push("Usage: format color <on|off>".to_string());
+                    }
+                } else {
+                    self.output_messages
+                        .push("Usage: format [show|set <type>|demo|color <on|off>]".to_string());
                 }
             }
             _ => {
