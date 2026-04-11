@@ -1,12 +1,14 @@
 mod ai;
 mod commands;
 mod system;
+mod ui;
 
 use ai::{AiProvider, OllamaClient};
 use commands::CommandInput;
 use commands::{parse_file_command, parse_network_command, parse_system_command};
 use eframe::egui;
 use system::SystemStats;
+use ui::{Theme, UiState};
 
 pub struct HeliosApp {
     command_input: CommandInput,
@@ -16,6 +18,7 @@ pub struct HeliosApp {
     is_processing: bool,
     selected_category: usize,
     current_time: String,
+    ui_state: UiState,
 }
 
 impl Default for HeliosApp {
@@ -31,6 +34,7 @@ impl Default for HeliosApp {
             is_processing: false,
             selected_category: 0,
             current_time: "00:00:00".to_string(),
+            ui_state: UiState::default(),
         }
     }
 }
@@ -114,6 +118,19 @@ impl HeliosApp {
                     .push("  kill <pid> - Kill process".to_string());
                 self.output_messages
                     .push("  info <pid> - Process info".to_string());
+                self.output_messages.push("".to_string());
+                self.output_messages.push("=== UI/Theme ===".to_string());
+                self.output_messages
+                    .push("  theme list - List themes".to_string());
+                self.output_messages
+                    .push("  theme set <name> - Set theme".to_string());
+                self.output_messages
+                    .push("  theme next - Next theme".to_string());
+                self.output_messages
+                    .push("  shortcuts - Toggle shortcuts overlay".to_string());
+                self.output_messages.push("".to_string());
+                self.output_messages
+                    .push("Press ? for shortcuts, T to cycle theme".to_string());
             }
             Some(&"status") => {
                 self.system_stats.refresh();
@@ -278,6 +295,57 @@ impl HeliosApp {
                     Err(e) => self.output_messages.push(e),
                 }
             }
+            Some(&"theme") => {
+                let args: Vec<&str> = parts[1..].iter().copied().collect();
+                if args.is_empty() || args[0] == "list" {
+                    self.output_messages.push("Available themes:".to_string());
+                    for t in Theme::all() {
+                        let current = if self.ui_state.theme == *t {
+                            " (current)"
+                        } else {
+                            ""
+                        };
+                        self.output_messages
+                            .push(format!("  {}{}", t.name(), current));
+                    }
+                } else if args[0] == "set" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: theme set <name>".to_string());
+                    } else {
+                        let theme_name = args[1].to_lowercase();
+                        for t in Theme::all() {
+                            if t.name().to_lowercase() == theme_name {
+                                self.ui_state.theme = *t;
+                                self.output_messages
+                                    .push(format!("Theme set to: {}", t.name()));
+                                break;
+                            }
+                        }
+                    }
+                } else if args[0] == "next" {
+                    let themes = Theme::all();
+                    let current_idx = themes
+                        .iter()
+                        .position(|t| *t == self.ui_state.theme)
+                        .unwrap_or(0);
+                    let next_idx = (current_idx + 1) % themes.len();
+                    self.ui_state.theme = themes[next_idx].clone();
+                    self.output_messages
+                        .push(format!("Theme: {}", self.ui_state.theme.name()));
+                } else {
+                    self.output_messages
+                        .push("Usage: theme [list|set <name>|next]".to_string());
+                }
+            }
+            Some(&"shortcuts") => {
+                self.ui_state.show_shortcuts = !self.ui_state.show_shortcuts;
+                self.output_messages.push(if self.ui_state.show_shortcuts {
+                    "Shortcuts overlay enabled. Press ? to toggle.".to_string()
+                } else {
+                    "Shortcuts overlay disabled.".to_string()
+                });
+            }
             _ => {
                 self.output_messages.push(format!(
                     "Unknown command: {}. Type 'help' for available commands.",
@@ -291,8 +359,62 @@ impl HeliosApp {
 impl eframe::App for HeliosApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.update_time();
+        self.ui_state.theme.apply(ui.ctx());
+
+        if ui.input(|i| i.key_pressed(egui::Key::Questionmark)) {
+            self.ui_state.show_shortcuts = !self.ui_state.show_shortcuts;
+        }
+        if ui.input(|i| i.key_pressed(egui::Key::T))
+            && !self.command_input.current.contains("theme")
+        {
+            let themes = Theme::all();
+            let current_idx = themes
+                .iter()
+                .position(|t| *t == self.ui_state.theme)
+                .unwrap_or(0);
+            let next_idx = (current_idx + 1) % themes.len();
+            self.ui_state.theme = themes[next_idx].clone();
+        }
+        if ui.input(|i| i.key_pressed(egui::Key::T)) && self.command_input.current.is_empty() {
+            let themes = Theme::all();
+            let current_idx = themes
+                .iter()
+                .position(|t| *t == self.ui_state.theme)
+                .unwrap_or(0);
+            let next_idx = (current_idx + 1) % themes.len();
+            self.ui_state.theme = themes[next_idx].clone();
+        }
+        if ui.input(|i| i.key_pressed(egui::Key::Escape)) {
+            self.ui_state.show_shortcuts = false;
+        }
 
         egui::CentralPanel::default().show_inside(ui, |ui| {
+            if self.ui_state.show_shortcuts {
+                egui::Area::new(egui::Id::new("shortcuts_overlay"))
+                    .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                    .show(ui.ctx(), |ui| {
+                        egui::Frame::default()
+                            .fill(egui::Color32::from_gray(20))
+                            .stroke(egui::Stroke::new(
+                                2.0,
+                                egui::Color32::from_rgb(100, 150, 255),
+                            ))
+                            .show(ui, |ui| {
+                                ui.heading("Keyboard Shortcuts");
+                                ui.separator();
+                                let shortcuts = ui::get_shortcuts();
+                                for shortcut in shortcuts {
+                                    ui.horizontal(|ui| {
+                                        ui.label(format!("{}", shortcut.key));
+                                        ui.label(shortcut.description);
+                                    });
+                                }
+                                ui.separator();
+                                ui.label("Press ? or Esc to close");
+                            });
+                    });
+            }
+
             ui.columns(3, |columns| {
                 columns[0].vertical(|ui| {
                     ui.add_space(10.0);
