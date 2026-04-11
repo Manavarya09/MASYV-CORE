@@ -6,34 +6,34 @@
 ![Rust](https://img.shields.io/badge/Rust-1.75+-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**HELIOS** is a modern, AI-powered command system built with Rust and eframe/egui. It provides a beautiful GUI interface with extensive command capabilities, AI integration, and plugin support.
+HELIOS is a modern, AI-powered command system built with Rust and eframe/egui. It provides a professional GUI interface with extensive command capabilities, AI integration, and plugin support.
 
 </div>
 
-## ✨ Features
+## Features
 
 ### Core Features
-- 📁 **File Operations** - ls, cd, pwd, read, write, mkdir, delete
-- 🌐 **Network Tools** - ping, curl, port scanning
-- ⚙️ **System Commands** - process management, system stats
-- 📜 **Command History** - searchable history with fuzzy search
+- File Operations - ls, cd, pwd, read, write, mkdir, delete
+- Network Tools - ping, curl, port scanning
+- System Commands - process management, system stats
+- Command History - searchable history with fuzzy search
 
 ### AI Integration
-- 🤖 **Multi-Provider Support** - Ollama, OpenAI, Anthropic
-- 💬 **Chat History** - conversation context
-- ⚡ **Real-time Responses** - streaming AI assistance
+- Multi-Provider Support - Ollama, OpenAI, Anthropic
+- Chat History - conversation context
+- Real-time Responses - streaming AI assistance
 
 ### UI/UX
-- 🎨 **5 Themes** - Dark, Light, Cyberpunk, Ocean, Forest
-- ⌨️ **Keyboard Shortcuts** - press ? for help
-- 📱 **Modern Interface** - clean 3-panel layout
+- 5 Themes - Dark, Light, Cyberpunk, Ocean, Forest
+- Keyboard Shortcuts - press ? for help
+- Professional Interface - clean 3-panel layout
 
 ### Advanced Features
-- 🔌 **Plugin System** - extensible architecture
-- ⚙️ **Persistent Config** - JSON-based settings
-- 🔐 **API Server Mode** - remote access (coming soon)
+- Plugin System - extensible architecture
+- Persistent Config - JSON-based settings
+- API Server Mode - remote access (coming soon)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Rust 1.75+
@@ -50,100 +50,103 @@ cd MASYV-CORE
 cargo run --release
 ```
 
-## 📖 Commands
+## Commands
 
 ### General Commands
 | Command | Description |
 |---------|-------------|
-| `help` | Show all available commands |
-| `status` | Show system status |
-| `clear` | Clear output |
-| `stats` | Show detailed system stats |
-| `time` | Show current time |
+| help | Show all available commands |
+| status | Show system status |
+| clear | Clear terminal output |
+| stats | Show detailed system stats |
+| time | Show current time |
+| history | Command history management |
+| alias | Alias management |
+| env | Environment variables |
 
 ### File Operations
 | Command | Description |
 |---------|-------------|
-| `ls [path]` | List directory contents |
-| `cd <path>` | Change directory |
-| `pwd` | Print working directory |
-| `read <file>` | Read file contents |
-| `write <file> <content>` | Write to file |
-| `mkdir <dir>` | Create directory |
-| `delete <path>` | Delete file/directory |
+| ls [path] | List directory contents |
+| cd <path> | Change directory |
+| pwd | Print working directory |
+| read <file> | Read file contents |
+| write <file> <content> | Write to file |
+| mkdir <dir> | Create directory |
+| delete <path> | Delete file/directory |
 
 ### Network Tools
 | Command | Description |
 |---------|-------------|
-| `ping <host> [count]` | Ping a host |
-| `curl <url>` | Fetch URL content |
-| `scan <host> [start] [end]` | Scan ports |
+| ping <host> [count] | Ping a host |
+| curl <url> | Fetch URL content |
+| scan <host> [start] [end] | Scan ports |
 
 ### System Commands
 | Command | Description |
 |---------|-------------|
-| `processes [count]` | List running processes |
-| `kill <pid>` | Kill a process |
-| `info <pid>` | Get process info |
+| processes [count] | List running processes |
+| kill <pid> | Kill a process |
+| info <pid> | Get process info |
 
 ### AI Commands
 | Command | Description |
 |---------|-------------|
-| `ai <prompt>` | Ask AI |
-| `ai provider <name>` | Set AI provider |
-| `ai model <name>` | Set AI model |
-| `ai history` | Show chat history |
-| `ai clear` | Clear chat history |
+| ai <prompt> | Ask AI |
+| ai provider <name> | Set AI provider |
+| ai model <name> | Set AI model |
+| ai history | Show chat history |
+| ai clear | Clear chat history |
 
 ### Theme Commands
 | Command | Description |
 |---------|-------------|
-| `theme list` | List all themes |
-| `theme set <name>` | Set theme |
-| `theme next` | Cycle to next theme |
+| theme list | List all themes |
+| theme set <name> | Set theme |
+| theme next | Cycle to next theme |
 
 ### Config Commands
 | Command | Description |
 |---------|-------------|
-| `config list` | List all settings |
-| `config get <key>` | Get setting value |
-| `config set <key> <value>` | Set setting |
-| `config save` | Save config |
-| `config reset` | Reset to defaults |
+| config list | List all settings |
+| config get <key> | Get setting value |
+| config set <key> <value> | Set setting |
+| config save | Save config |
+| config reset | Reset to defaults |
 
-### Plugin Commands
+### Output Commands
 | Command | Description |
 |---------|-------------|
-| `plugin list` | List loaded plugins |
-| `plugin info <name>` | Get plugin info |
-| `plugin run <name> <cmd>` | Run plugin command |
+| format show | Show current format |
+| format set <type> | Set output format |
+| format demo | Demonstrate formats |
 
-## ⌨️ Keyboard Shortcuts
+## Keyboard Shortcuts
 
 | Key | Action |
 |-----|--------|
-| `Enter` | Execute command |
-| `↑` / `↓` | Navigate history |
-| `?` | Toggle shortcuts overlay |
-| `T` | Cycle theme |
-| `Esc` | Close overlay |
+| Enter | Execute command |
+| Arrow Up/Down | Navigate history |
+| ? | Toggle shortcuts overlay |
+| T | Cycle theme |
+| Esc | Close overlay |
 
-## 🎨 Themes
+## Themes
 
-- **Dark** (default) - Classic dark theme
-- **Light** - Clean light theme
-- **Cyberpunk** - Neon-inspired theme
-- **Ocean** - Blue ocean theme
-- **Forest** - Green forest theme
+- Dark (default) - Classic dark theme
+- Light - Clean light theme
+- Cyberpunk - Neon-inspired theme
+- Ocean - Blue ocean theme
+- Forest - Green forest theme
 
-## 🔌 Plugins
+## Plugins
 
 ### Built-in Plugins
-- **FileManager** - Advanced file operations
-- **NetworkTools** - Network diagnostics
-- **ProcessManager** - Process management
+- FileManager - Advanced file operations
+- NetworkTools - Network diagnostics
+- ProcessManager - Process management
 
-## 🤖 AI Configuration
+## AI Configuration
 
 ### Ollama (Default)
 ```bash
@@ -165,23 +168,23 @@ ai apikey YOUR_API_KEY
 ai model claude-3-haiku
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 masyv-core/
 ├── src/
 │   ├── ai/           # AI integration
-│   ├── commands/     # Command implementations
-│   ├── config/       # Configuration system
-│   ├── plugins/      # Plugin system
+│   ├── commands/    # Command implementations
+│   ├── config/      # Configuration system
+│   ├── plugins/     # Plugin system
 │   ├── system/       # System stats
-│   ├── ui/           # UI/Theme system
-│   └── lib.rs        # Main application
-├── Cargo.toml        # Project config
-└── README.md         # This file
+│   ├── ui/          # UI/Theme system
+│   └── lib.rs       # Main application
+├── Cargo.toml       # Project config
+└── README.md        # This file
 ```
 
-## 🛠️ Development
+## Development
 
 ### Build
 ```bash
@@ -198,21 +201,14 @@ cargo run
 cargo test
 ```
 
-## 📝 License
+## License
 
 MIT License - see LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- [eframe](https://github.com/emilk/eframe) - GUI framework
-- [egui](https://github.com/emilk/egui) - UI library
-- [sysinfo](https://github.com/GuillaumeGomez/sysinfo) - System info
-- [Ollama](https://github.com/ollama/ollama) - Local AI
 
 ---
 
 <div align="center">
 
-**HELIOS** - *Your AI-Powered Command System*
+HELIOS - Your AI-Powered Command System
 
 </div>

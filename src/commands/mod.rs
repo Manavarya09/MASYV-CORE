@@ -1,13 +1,19 @@
 pub mod alias;
+pub mod calculator;
 pub mod env;
 pub mod file_ops;
 pub mod input;
 pub mod network;
+pub mod notes;
 pub mod system_cmds;
+pub mod todo;
 
 pub use alias::{Alias, AliasManager};
+pub use calculator::Calculator;
 pub use env::EnvManager;
 pub use file_ops::parse_file_command;
 pub use input::CommandInput;
 pub use network::parse_network_command;
+pub use notes::{Note, NotesManager};
 pub use system_cmds::parse_system_command;
+pub use todo::{TodoItem, TodoManager};

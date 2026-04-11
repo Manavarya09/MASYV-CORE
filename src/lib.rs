@@ -1,6 +1,7 @@
 mod ai;
 mod commands;
 mod config;
+mod jarvis;
 mod output;
 mod plugins;
 mod system;
@@ -8,13 +9,14 @@ mod ui;
 
 use ai::{AiProvider, OllamaClient};
 use commands::{parse_file_command, parse_network_command, parse_system_command};
-use commands::{AliasManager, CommandInput, EnvManager};
+use commands::{AliasManager, Calculator, CommandInput, EnvManager, NotesManager, TodoManager};
 use config::AppConfig;
 use eframe::egui;
+use jarvis::JarviState;
 use output::OutputFormatter;
 use plugins::{FileManagerPlugin, NetworkToolsPlugin, PluginRegistry, ProcessManagerPlugin};
 use system::SystemStats;
-use ui::{Theme, UiState};
+use ui::{AlertManager, RealtimeGraph, Theme, UiState};
 
 pub struct HeliosApp {
     command_input: CommandInput,
@@ -30,6 +32,12 @@ pub struct HeliosApp {
     alias_manager: AliasManager,
     env_manager: EnvManager,
     output_formatter: OutputFormatter,
+    notes_manager: NotesManager,
+    todo_manager: TodoManager,
+    calculator: Calculator,
+    jarvis: JarviState,
+    realtime_graphs: RealtimeGraph,
+    alert_manager: AlertManager,
 }
 
 impl Default for HeliosApp {
@@ -38,6 +46,12 @@ impl Default for HeliosApp {
         let mut plugin_registry = PluginRegistry::new();
         let alias_manager = AliasManager::new();
         let env_manager = EnvManager::new();
+        let notes_manager = NotesManager::new();
+        let todo_manager = TodoManager::new();
+        let calculator = Calculator::new();
+        let jarvis = JarviState::new();
+        let realtime_graphs = RealtimeGraph::new();
+        let alert_manager = AlertManager::new();
 
         let _ = plugin_registry.register(Box::new(FileManagerPlugin::new()));
         let _ = plugin_registry.register(Box::new(NetworkToolsPlugin::new()));
@@ -46,8 +60,8 @@ impl Default for HeliosApp {
         Self {
             command_input: CommandInput::default(),
             output_messages: vec![
-                "HELIOS v0.1.0 Command System".to_string(),
-                "Type 'help' for available commands".to_string(),
+                "HELIOS v0.2.0 Advanced Command System".to_string(),
+                "Type 'help' for command reference".to_string(),
             ],
             ollama: OllamaClient::default(),
             system_stats: SystemStats::new(),
@@ -60,12 +74,30 @@ impl Default for HeliosApp {
             alias_manager,
             env_manager,
             output_formatter: OutputFormatter::new(),
+            notes_manager,
+            todo_manager,
+            calculator,
+            jarvis,
+            realtime_graphs,
+            alert_manager,
         }
     }
 }
 
 impl HeliosApp {
     fn update_time(&mut self) {
+        self.jarvis.update();
+
+        // Update realtime graphs
+        self.realtime_graphs.update(
+            self.system_stats.cpu_usage(),
+            self.system_stats.memory_percent(),
+            self.jarvis.network_activity,
+            self.jarvis.power_consumption,
+            self.jarvis.core_temp,
+            self.jarvis.processing_load,
+        );
+
         use std::time::SystemTime;
         let now = SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -102,38 +134,40 @@ impl HeliosApp {
         match parts.first() {
             Some(&"help") => {
                 self.output_messages
-                    .push("HELIOS v0.1.0 - Available Commands:".to_string());
-                self.output_messages.push("".to_string());
-                self.output_messages.push("=== General ===".to_string());
-                self.output_messages
-                    .push("  help - Show this help".to_string());
-                self.output_messages
-                    .push("  status - Show system status".to_string());
-                self.output_messages
-                    .push("  clear - Clear output".to_string());
-                self.output_messages
-                    .push("  stats - Show system stats".to_string());
-                self.output_messages
-                    .push("  time - Show current time".to_string());
-                self.output_messages
-                    .push("  history [cmd] - Command history".to_string());
-                self.output_messages
-                    .push("  alias [cmd] - Command aliases".to_string());
-                self.output_messages
-                    .push("  env [cmd] - Environment variables".to_string());
-                self.output_messages.push("".to_string());
-                self.output_messages.push("=== AI ===".to_string());
-                self.output_messages
-                    .push("  ai <prompt> - Ask AI".to_string());
-                self.output_messages
-                    .push("  chat - Start AI chat mode".to_string());
+                    .push("HELIOS v0.2.0 - Command Reference".to_string());
                 self.output_messages.push("".to_string());
                 self.output_messages
-                    .push("=== File Operations ===".to_string());
+                    .push("=== SYSTEM COMMANDS ===".to_string());
                 self.output_messages
-                    .push("  ls [path] - List directory".to_string());
+                    .push("  help - Display command reference".to_string());
                 self.output_messages
-                    .push("  cd <path> - Change directory".to_string());
+                    .push("  status - Display system status".to_string());
+                self.output_messages
+                    .push("  clear - Clear terminal output".to_string());
+                self.output_messages
+                    .push("  stats - Display detailed system statistics".to_string());
+                self.output_messages
+                    .push("  time - Display current system time".to_string());
+                self.output_messages
+                    .push("  history [cmd] - Command history management".to_string());
+                self.output_messages
+                    .push("  alias [cmd] - Alias management".to_string());
+                self.output_messages
+                    .push("  env [cmd] - Environment variable management".to_string());
+                self.output_messages.push("".to_string());
+                self.output_messages.push("=== AI ENGINE ===".to_string());
+                self.output_messages
+                    .push("  ai <prompt> - Query AI assistant".to_string());
+                self.output_messages
+                    .push("  ai provider <name> - Set AI provider".to_string());
+                self.output_messages
+                    .push("  ai model <name> - Set AI model".to_string());
+                self.output_messages.push("".to_string());
+                self.output_messages.push("=== FILE SYSTEM ===".to_string());
+                self.output_messages
+                    .push("  ls [path] - List directory contents".to_string());
+                self.output_messages
+                    .push("  cd <path> - Change working directory".to_string());
                 self.output_messages
                     .push("  pwd - Print working directory".to_string());
                 self.output_messages
@@ -143,48 +177,58 @@ impl HeliosApp {
                 self.output_messages
                     .push("  mkdir <dir> - Create directory".to_string());
                 self.output_messages
-                    .push("  delete <path> - Delete file/directory".to_string());
+                    .push("  delete <path> - Delete file or directory".to_string());
                 self.output_messages.push("".to_string());
-                self.output_messages.push("=== Network ===".to_string());
+                self.output_messages.push("=== NETWORK ===".to_string());
                 self.output_messages
-                    .push("  ping <host> [count] - Ping a host".to_string());
+                    .push("  ping <host> [count] - ICMP ping utility".to_string());
                 self.output_messages
-                    .push("  curl <url> - Fetch URL".to_string());
+                    .push("  curl <url> - HTTP request client".to_string());
                 self.output_messages
-                    .push("  scan <host> [start] [end] - Scan ports".to_string());
+                    .push("  scan <host> [start] [end] - Port scanner".to_string());
                 self.output_messages.push("".to_string());
-                self.output_messages.push("=== System ===".to_string());
                 self.output_messages
-                    .push("  processes [count] - List processes".to_string());
+                    .push("=== PROCESS MANAGEMENT ===".to_string());
                 self.output_messages
-                    .push("  kill <pid> - Kill process".to_string());
+                    .push("  processes [count] - List running processes".to_string());
                 self.output_messages
-                    .push("  info <pid> - Process info".to_string());
+                    .push("  kill <pid> - Terminate process by ID".to_string());
+                self.output_messages
+                    .push("  info <pid> - Display process information".to_string());
                 self.output_messages.push("".to_string());
-                self.output_messages.push("=== UI/Theme ===".to_string());
+                self.output_messages.push("=== APPEARANCE ===".to_string());
                 self.output_messages
-                    .push("  theme list - List themes".to_string());
+                    .push("  theme list - List available themes".to_string());
                 self.output_messages
-                    .push("  theme set <name> - Set theme".to_string());
+                    .push("  theme set <name> - Apply theme".to_string());
                 self.output_messages
-                    .push("  theme next - Next theme".to_string());
+                    .push("  theme next - Cycle to next theme".to_string());
                 self.output_messages
-                    .push("  shortcuts - Toggle shortcuts overlay".to_string());
+                    .push("  shortcuts - Toggle keyboard shortcuts".to_string());
                 self.output_messages.push("".to_string());
-                self.output_messages.push("=== Settings ===".to_string());
+                self.output_messages
+                    .push("=== CONFIGURATION ===".to_string());
                 self.output_messages
                     .push("  config list - List all settings".to_string());
                 self.output_messages
                     .push("  config get <key> - Get setting value".to_string());
                 self.output_messages
-                    .push("  config set <key> <value> - Set setting".to_string());
+                    .push("  config set <key> <value> - Set configuration".to_string());
                 self.output_messages
-                    .push("  config save - Save config to file".to_string());
+                    .push("  config save - Persist configuration".to_string());
                 self.output_messages
                     .push("  config reset - Reset to defaults".to_string());
                 self.output_messages.push("".to_string());
+                self.output_messages.push("=== OUTPUT ===".to_string());
                 self.output_messages
-                    .push("Press ? for shortcuts, T to cycle theme".to_string());
+                    .push("  format show - Display output format".to_string());
+                self.output_messages
+                    .push("  format set <type> - Set output format".to_string());
+                self.output_messages
+                    .push("  format demo - Demonstrate formats".to_string());
+                self.output_messages.push("".to_string());
+                self.output_messages
+                    .push("Keyboard: ?=shortcuts T=theme Esc=close".to_string());
             }
             Some(&"status") => {
                 self.system_stats.refresh();
@@ -910,6 +954,184 @@ impl HeliosApp {
                         .push("Usage: format [show|set <type>|demo|color <on|off>]".to_string());
                 }
             }
+            Some(&"calc") | Some(&"calculate") => {
+                let args: Vec<&str> = parts[1..].iter().copied().collect();
+                if args.is_empty() {
+                    self.output_messages
+                        .push("Usage: calc <expression> (e.g., calc 5+3*2)".to_string());
+                    self.output_messages
+                        .push("Operations: + - * / ^ %".to_string());
+                } else {
+                    let expr = args.join(" ");
+                    match self.calculator.evaluate(&expr) {
+                        Ok(result) => {
+                            self.output_messages.push(format!("Result: {}", result));
+                        }
+                        Err(e) => self.output_messages.push(format!("Error: {}", e)),
+                    }
+                }
+            }
+            Some(&"note") | Some(&"notes") => {
+                let args: Vec<&str> = parts[1..].iter().copied().collect();
+
+                if args.is_empty() || args[0] == "list" {
+                    let notes = self.notes_manager.list();
+                    if notes.is_empty() {
+                        self.output_messages.push("No notes found.".to_string());
+                    } else {
+                        self.output_messages
+                            .push(format!("Notes ({} total):", notes.len()));
+                        for n in notes.iter().take(20) {
+                            self.output_messages
+                                .push(format!("  [{}] {}", n.id, n.title));
+                        }
+                    }
+                } else if args[0] == "add" {
+                    if args.len() < 3 {
+                        self.output_messages
+                            .push("Usage: note add <title> <content>".to_string());
+                    } else {
+                        let title = args[1].to_string();
+                        let content = args[2..].join(" ");
+                        let id = self.notes_manager.add(title, content);
+                        self.output_messages
+                            .push(format!("Note created with ID: {}", id));
+                    }
+                } else if args[0] == "get" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: note get <id>".to_string());
+                    } else if let Ok(id) = args[1].parse::<usize>() {
+                        if let Some(note) = self.notes_manager.get(id) {
+                            self.output_messages.push(format!("Title: {}", note.title));
+                            self.output_messages
+                                .push(format!("Content: {}", note.content));
+                        } else {
+                            self.output_messages.push(format!("Note {} not found", id));
+                        }
+                    }
+                } else if args[0] == "delete" || args[0] == "del" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: note delete <id>".to_string());
+                    } else if let Ok(id) = args[1].parse::<usize>() {
+                        if self.notes_manager.delete(id) {
+                            self.output_messages.push(format!("Note {} deleted", id));
+                        } else {
+                            self.output_messages.push(format!("Note {} not found", id));
+                        }
+                    }
+                } else if args[0] == "search" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: note search <query>".to_string());
+                    } else {
+                        let results = self.notes_manager.search(args[1]);
+                        if results.is_empty() {
+                            self.output_messages
+                                .push(format!("No notes found matching '{}'", args[1]));
+                        } else {
+                            self.output_messages
+                                .push(format!("Found {} notes:", results.len()));
+                            for n in results {
+                                self.output_messages
+                                    .push(format!("  [{}] {}", n.id, n.title));
+                            }
+                        }
+                    }
+                } else if args[0] == "count" {
+                    self.output_messages
+                        .push(format!("Total notes: {}", self.notes_manager.count()));
+                } else {
+                    self.output_messages.push("Usage: note [list|add <title> <content>|get <id>|delete <id>|search <query>|count]".to_string());
+                }
+            }
+            Some(&"todo") => {
+                let args: Vec<&str> = parts[1..].iter().copied().collect();
+
+                if args.is_empty() || args[0] == "list" {
+                    let items = self.todo_manager.list(true);
+                    if items.is_empty() {
+                        self.output_messages.push("No todo items.".to_string());
+                    } else {
+                        self.output_messages.push(format!(
+                            "Todo List ({} pending, {} completed):",
+                            self.todo_manager.get_pending_count(),
+                            self.todo_manager.get_completed_count()
+                        ));
+                        for item in items.iter().take(30) {
+                            let status = if item.completed { "[x]" } else { "[ ]" };
+                            let priority = "*".repeat(item.priority as usize);
+                            self.output_messages.push(format!(
+                                "  {} {} {} - {}",
+                                status, priority, item.id, item.title
+                            ));
+                        }
+                    }
+                } else if args[0] == "add" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: todo add <title> [priority 1-5]".to_string());
+                    } else {
+                        let priority: u8 = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(1);
+                        let title = args[1].to_string();
+                        let description = args.get(3).map(|s| s.to_string()).unwrap_or_default();
+                        let id = self.todo_manager.add(title, description, priority);
+                        self.output_messages
+                            .push(format!("Todo added with ID: {}", id));
+                    }
+                } else if args[0] == "done" || args[0] == "complete" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: todo done <id>".to_string());
+                    } else if let Ok(id) = args[1].parse::<usize>() {
+                        if self.todo_manager.complete(id) {
+                            self.output_messages
+                                .push(format!("Todo {} marked complete", id));
+                        } else {
+                            self.output_messages.push(format!("Todo {} not found", id));
+                        }
+                    }
+                } else if args[0] == "undo" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: todo undo <id>".to_string());
+                    } else if let Ok(id) = args[1].parse::<usize>() {
+                        if self.todo_manager.uncomplete(id) {
+                            self.output_messages
+                                .push(format!("Todo {} marked pending", id));
+                        } else {
+                            self.output_messages.push(format!("Todo {} not found", id));
+                        }
+                    }
+                } else if args[0] == "delete" || args[0] == "del" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: todo delete <id>".to_string());
+                    } else if let Ok(id) = args[1].parse::<usize>() {
+                        if self.todo_manager.delete(id) {
+                            self.output_messages.push(format!("Todo {} deleted", id));
+                        } else {
+                            self.output_messages.push(format!("Todo {} not found", id));
+                        }
+                    }
+                } else if args[0] == "clear" {
+                    self.todo_manager.clear_completed();
+                    self.output_messages
+                        .push("Completed todos cleared.".to_string());
+                } else if args[0] == "pending" {
+                    let items = self.todo_manager.list(false);
+                    self.output_messages
+                        .push(format!("Pending todos ({}):", items.len()));
+                    for item in items {
+                        let priority = "*".repeat(item.priority as usize);
+                        self.output_messages
+                            .push(format!("  [{}] {} - {}", priority, item.id, item.title));
+                    }
+                } else {
+                    self.output_messages.push("Usage: todo [list|add <title> [priority]|done <id>|undo <id>|delete <id>|clear|pending]".to_string());
+                }
+            }
             _ => {
                 self.output_messages.push(format!(
                     "Unknown command: {}. Type 'help' for available commands.",
@@ -979,32 +1201,328 @@ impl eframe::App for HeliosApp {
                     });
             }
 
-            ui.columns(3, |columns| {
+            ui.columns(4, |columns| {
+                // PANEL 1 - Navigation & Quick Stats
                 columns[0].vertical(|ui| {
-                    ui.add_space(10.0);
+                    ui.add_space(5.0);
+                    
+                    // Logo Area
                     ui.heading("HELIOS");
-                    ui.label("v0.1.0");
+                    ui.label("v0.3.0 | Jarvis Core");
+                    ui.separator();
+                    
+                    // Navigation
+                    let categories = ["MAIN", "AI", "FILES", "NETWORK", "SYSTEM", "CONFIG"];
+                    for (i, cat) in categories.iter().enumerate() {
+                        let selected = self.selected_category == i;
+                        ui.add_space(3.0);
+                        if ui.selectable_label(selected, *cat).clicked() {
+                            self.selected_category = i;
+                        }
+                    }
+                    
+                    ui.add_space(15.0);
+                    ui.separator();
+                    
+                    // Quick Stats
+                    ui.label("QUICK STATS");
+                    ui.add_space(5.0);
+                    self.system_stats.refresh();
+                    ui.label(format!("CPU: {:.0}%", self.system_stats.cpu_usage()));
+                    ui.label(format!("MEM: {:.0}%", self.system_stats.memory_percent()));
+                    ui.label(format!("PROCS: {}", self.system_stats.system.processes().len()));
+                    ui.label(format!("UPTIME: {}", self.system_stats.uptime()));
+                });
+
+                // PANEL 2 - Realtime Graphs
+                columns[1].vertical(|ui| {
+                    ui.add_space(5.0);
+                    ui.heading("REAL-TIME METRICS");
                     ui.separator();
                     ui.add_space(5.0);
+                    
+                    // CPU Graph
+                    ui.label("CPU LOAD");
+                    let cpu_data = self.realtime_graphs.cpu.get_normalized();
+                    for (i, &val) in cpu_data.iter().take(30).enumerate() {
+                        let bar_height = (val * 20.0) as usize;
+                        let color = if val > 0.8 { egui::Color32::RED } else if val > 0.5 { egui::Color32::YELLOW } else { egui::Color32::from_rgb(0, 200, 150) };
+                        ui.colored_label(color, "█".repeat(bar_height + 1));
+                    }
+                    ui.label(format!("{:.1}%", self.jarvis.processing_load));
+                    
+                    ui.add_space(10.0);
+                    
+                    // Memory Graph
+                    ui.label("MEMORY USAGE");
+                    let mem_data = self.realtime_graphs.memory.get_normalized();
+                    for (i, &val) in mem_data.iter().take(30).enumerate() {
+                        let bar_height = (val * 20.0) as usize;
+                        let color = if val > 0.9 { egui::Color32::RED } else if val > 0.7 { egui::Color32::YELLOW } else { egui::Color32::from_rgb(100, 100, 255) };
+                        ui.colored_label(color, "█".repeat(bar_height + 1));
+                    }
+                    ui.label(format!("{:.1}%", self.jarvis.memory_usage));
+                    
+                    ui.add_space(10.0);
+                    
+                    // Network Graph
+                    ui.label("NETWORK ACTIVITY");
+                    let net_data = self.realtime_graphs.network.get_normalized();
+                    for (i, &val) in net_data.iter().take(30).enumerate() {
+                        let bar_height = (val * 20.0) as usize;
+                        ui.colored_label(egui::Color32::from_rgb(255, 100, 50), "█".repeat(bar_height + 1));
+                    }
+                    ui.label(format!("{:.1}%", self.jarvis.network_activity));
+                    
+                    ui.add_space(10.0);
+                    
+                    // Power Graph
+                    ui.label("POWER CONSUMPTION");
+                    let power_data = self.realtime_graphs.power.get_normalized();
+                    for (i, &val) in power_data.iter().take(30).enumerate() {
+                        let bar_height = (val * 20.0) as usize;
+                        ui.colored_label(egui::Color32::from_rgb(255, 200, 0), "█".repeat(bar_height + 1));
+                    }
+                    ui.label(format!("{:.1}%", self.jarvis.power_consumption));
+                });
 
-                    let categories = ["System", "AI", "Files", "Network", "Settings"];
-                    for (i, cat) in categories.iter().enumerate() {
-                        if ui
-                            .selectable_label(self.selected_category == i, *cat)
-                            .clicked()
-                        {
-                            self.selected_category = i;
+                // PANEL 3 - System Status & JARVIS
+                columns[2].vertical(|ui| {
+                    ui.add_space(5.0);
+                    ui.heading("SYSTEM STATUS");
+                    ui.separator();
+                    ui.add_space(5.0);
+                    
+                    // JARVIS Status
+                    ui.colored_label(egui::Color32::from_rgb(0, 255, 200), "● JARVIS ACTIVE");
+                    ui.add_space(3.0);
+                    ui.label(format!("MODE: {}", self.jarvis.system_mode));
+                    ui.label(format!("THREAT: {}", self.jarvis.threat_level));
+                    ui.label(format!("SECURITY: {}", self.jarvis.security_status));
+                    
+                    ui.separator();
+                    ui.add_space(5.0);
+                    
+                    // Gauges
+                    ui.label("CORE TEMPERATURE");
+                    ui.add(egui::ProgressBar::new(self.jarvis.core_temp / 100.0).desired_width(180.0));
+                    ui.label(format!("{:.1}°C", self.jarvis.core_temp));
+                    
+                    ui.add_space(8.0);
+                    ui.label("PROCESSING LOAD");
+                    ui.add(egui::ProgressBar::new(self.jarvis.processing_load / 100.0).desired_width(180.0));
+                    ui.label(format!("{:.1}%", self.jarvis.processing_load));
+                    
+                    ui.add_space(8.0);
+                    ui.label("AI ENGINE");
+                    let ai_online = self.ollama.is_available();
+                    ui.colored_label(if ai_online { egui::Color32::GREEN } else { egui::Color32::RED }, 
+                        if ai_online { "● ONLINE" } else { "○ OFFLINE" });
+                    
+                    ui.separator();
+                    ui.add_space(5.0);
+                    ui.label("ALERTS");
+                    if self.alert_manager.alerts.is_empty() {
+                        ui.label("No active alerts");
+                    } else {
+                        for alert in self.alert_manager.alerts.iter().take(5) {
+                            let color = match alert.level {
+                                ui::AlertLevel::Critical => egui::Color32::RED,
+                                ui::AlertLevel::Warning => egui::Color32::YELLOW,
+                                ui::AlertLevel::Info => egui::Color32::LIGHT_BLUE,
+                            };
+                            ui.colored_label(color, &alert.message);
                         }
                     }
                 });
 
+                // PANEL 4 - Command Input
+                columns[3].vertical(|ui| {
+                    ui.add_space(5.0);
+                    ui.heading("COMMAND CONSOLE");
+                    ui.separator();
+                    ui.add_space(5.0);
+
+                    ui.horizontal(|ui| {
+                        ui.label(">");
+                        ui.text_edit_singleline(&mut self.command_input.current);
+                    });
+
+                    if ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                        let cmd = self.command_input.current.clone();
+                        if !cmd.is_empty() {
+                            self.command_input.push_command(cmd.clone());
+                            self.execute_command(&cmd);
+                        }
+                    }
+
+                    if ui.input(|i| i.key_pressed(egui::Key::ArrowUp)) {
+                        self.command_input.navigate_history_up();
+                    }
+                    if ui.input(|i| i.key_pressed(egui::Key::ArrowDown)) {
+                        self.command_input.navigate_history_down();
+                    }
+
+                    ui.add_space(5.0);
+                    if ui.button("EXECUTE").clicked() {
+                        let cmd = self.command_input.current.clone();
+                        if !cmd.is_empty() {
+                            self.command_input.push_command(cmd.clone());
+                            self.execute_command(&cmd);
+                        }
+                    }
+
+                    ui.separator();
+                    egui::ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui| {
+                        for msg in &self.output_messages {
+                            ui.label(msg);
+                        }
+                    });
+                });
+            });
+        });
+    }
+}
+                    }
+
+                    ui.add_space(15.0);
+                    ui.separator();
+                    ui.add_space(5.0);
+                    ui.label("SYSTEM METRICS");
+                    ui.add_space(5.0);
+                    self.system_stats.refresh();
+                    ui.label(format!("CPU Usage: {:.1}%", self.system_stats.cpu_usage()));
+                    ui.label(format!(
+                        "Memory: {} MB / {} MB",
+                        self.system_stats.memory_used_mb(),
+                        self.system_stats.memory_total_mb()
+                    ));
+                    ui.add(
+                        egui::ProgressBar::new(self.system_stats.memory_percent() / 100.0)
+                            .desired_width(120.0),
+                    );
+                    ui.add_space(5.0);
+                    ui.label(format!(
+                        "Processes: {}",
+                        self.system_stats.system.processes().len()
+                    ));
+                    ui.label(format!("Uptime: {}", self.system_stats.uptime()));
+                });
+
                 columns[1].vertical(|ui| {
+                    ui.add_space(5.0);
+
+                    ui.heading("JARVIS CORE");
+                    ui.label(&self.jarvis.status_summary());
+                    ui.separator();
+                    ui.add_space(5.0);
+
+                    ui.label("SYSTEM STATUS");
+                    ui.add_space(3.0);
+                    ui.label(format!("Mode: {}", self.jarvis.system_mode));
+                    ui.label(format!("Threat Level: {}", self.jarvis.threat_level));
+                    ui.label(format!("Security: {}", self.jarvis.security_status));
+                    ui.add_space(5.0);
+
+                    ui.label("CORE METRICS");
+                    ui.add_space(3.0);
+                    ui.label(format!("Power: {:.1}%", self.jarvis.power_consumption));
+                    ui.add(
+                        egui::ProgressBar::new(self.jarvis.power_consumption / 100.0)
+                            .desired_width(200.0),
+                    );
+                    ui.label(format!("Temperature: {:.1}C", self.jarvis.core_temp));
+                    ui.label(format!("Processing: {:.1}%", self.jarvis.processing_load));
+                    ui.add_space(5.0);
+
+                    ui.label("NETWORK");
+                    ui.add_space(3.0);
+                    ui.label(format!("Activity: {:.1}%", self.jarvis.network_activity));
+                    ui.label(format!("Connections: {}", self.jarvis.active_connections));
+                    ui.add_space(5.0);
+
+                    ui.label("MEMORY");
+                    ui.add_space(3.0);
+                    ui.label(format!("Usage: {:.1}%", self.jarvis.memory_usage));
+                    ui.add(
+                        egui::ProgressBar::new(self.jarvis.memory_usage / 100.0)
+                            .desired_width(200.0),
+                    );
+                });
+
+                columns[2].vertical(|ui| {
                     ui.add_space(10.0);
+                    ui.heading("STATUS PANEL");
+                    ui.separator();
+                    ui.add_space(10.0);
+
+                    self.system_stats.refresh();
+
+                    ui.label("SYSTEM RESOURCES");
+                    ui.add_space(5.0);
+                    ui.label("CPU Usage:");
+                    ui.label(format!("  {:.1}%", self.system_stats.cpu_usage()));
+                    ui.add_space(5.0);
+                    ui.label("Memory Usage:");
+                    ui.label(format!(
+                        "  {} / {} MB ({:.1}%)",
+                        self.system_stats.memory_used_mb(),
+                        self.system_stats.memory_total_mb(),
+                        self.system_stats.memory_percent()
+                    ));
+                    ui.add(
+                        egui::ProgressBar::new(self.system_stats.memory_percent() / 100.0)
+                            .desired_width(150.0),
+                    );
+
+                    ui.separator();
+                    ui.add_space(5.0);
+                    ui.label("AI ENGINE STATUS");
+                    ui.add_space(5.0);
+                    let ai_status = if self.ollama.is_available() {
+                        "Connected"
+                    } else {
+                        "Disconnected"
+                    };
+                    ui.label(format!("  Provider: {}", ai_status));
+                    ui.label(format!("  Model: {}", self.ollama.config().model));
+
+                    ui.separator();
+                    ui.add_space(5.0);
+                    ui.label("PLUGINS");
+                    let plugins = self.plugin_registry.list();
+                    ui.label(format!("  Loaded: {}", plugins.len()));
+                    for p in plugins.iter().take(3) {
+                        ui.label(format!("    - {}", p.name));
+                    }
+
+                    ui.separator();
+                    ui.add_space(5.0);
+                    ui.label("SYSTEM INFO");
+                    ui.add_space(5.0);
+                    ui.label(format!("  Hostname: {}", self.system_stats.hostname()));
+                    ui.label(format!("  Time: {}", self.current_time));
+                    ui.label(format!("  OS: {}", self.system_stats.os_name()));
+
+                    ui.separator();
+                    ui.add_space(5.0);
+                    ui.label("QUICK COMMANDS");
+                    ui.add_space(3.0);
+                    ui.label("  ? - Help overlay");
+                    ui.label("  T - Change theme");
+                    ui.label("  Esc - Close overlay");
+                });
+
+                columns[3].vertical(|ui| {
+                    ui.add_space(5.0);
                     ui.heading("COMMAND INPUT");
                     ui.separator();
                     ui.add_space(5.0);
 
-                    ui.text_edit_singleline(&mut self.command_input.current);
+                    ui.horizontal(|ui| {
+                        ui.label("> ");
+                        ui.text_edit_singleline(&mut self.command_input.current);
+                    });
 
                     if ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                         let cmd = self.command_input.current.clone();
@@ -1022,7 +1540,7 @@ impl eframe::App for HeliosApp {
                     }
 
                     let btn_text = if self.is_processing {
-                        "PROCESSING..."
+                        "PROCESS"
                     } else {
                         "EXECUTE"
                     };
@@ -1035,7 +1553,7 @@ impl eframe::App for HeliosApp {
                     }
 
                     ui.separator();
-                    ui.heading("OUTPUT");
+                    ui.heading("TERMINAL");
                     ui.separator();
 
                     egui::ScrollArea::vertical()
@@ -1045,43 +1563,6 @@ impl eframe::App for HeliosApp {
                                 ui.label(msg);
                             }
                         });
-                });
-
-                columns[2].vertical(|ui| {
-                    ui.add_space(10.0);
-                    ui.heading("SYSTEM STATUS");
-                    ui.separator();
-                    ui.add_space(10.0);
-
-                    self.system_stats.refresh();
-
-                    ui.label(format!("CPU: {:.1}%", self.system_stats.cpu_usage()));
-                    ui.label(format!(
-                        "Memory: {} / {} MB",
-                        self.system_stats.memory_used_mb(),
-                        self.system_stats.memory_total_mb()
-                    ));
-                    ui.add(
-                        egui::ProgressBar::new(self.system_stats.memory_percent() / 100.0)
-                            .desired_width(150.0),
-                    );
-
-                    ui.separator();
-                    ui.add_space(5.0);
-
-                    ui.label("AI ENGINE:");
-                    let ai_status = if self.ollama.is_available() {
-                        "ONLINE"
-                    } else {
-                        "OFFLINE"
-                    };
-                    ui.label(ai_status);
-
-                    ui.separator();
-                    ui.add_space(5.0);
-
-                    ui.label(format!("Host: {}", self.system_stats.hostname()));
-                    ui.label(format!("Time: {}", self.current_time));
                 });
             });
         });

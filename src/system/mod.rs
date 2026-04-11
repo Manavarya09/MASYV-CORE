@@ -55,6 +55,20 @@ impl SystemStats {
         self.system.cpus().len()
     }
 
+    pub fn uptime(&self) -> String {
+        let uptime = System::uptime();
+        let days = uptime / 86400;
+        let hours = (uptime % 86400) / 3600;
+        let mins = (uptime % 3600) / 60;
+        if days > 0 {
+            format!("{}d {}h {}m", days, hours, mins)
+        } else if hours > 0 {
+            format!("{}h {}m", hours, mins)
+        } else {
+            format!("{}m", mins)
+        }
+    }
+
     pub fn summary(&self) -> String {
         format!(
             "CPU: {:.1}% | RAM: {}MB / {}MB ({:.1}%) | CPUs: {}",
