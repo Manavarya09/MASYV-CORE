@@ -10,7 +10,7 @@ use commands::CommandInput;
 use commands::{parse_file_command, parse_network_command, parse_system_command};
 use config::AppConfig;
 use eframe::egui;
-use plugins::{PluginRegistry, FileManagerPlugin, NetworkToolsPlugin, ProcessManagerPlugin};
+use plugins::{FileManagerPlugin, NetworkToolsPlugin, PluginRegistry, ProcessManagerPlugin};
 use system::SystemStats;
 use ui::{Theme, UiState};
 
@@ -31,11 +31,11 @@ impl Default for HeliosApp {
     fn default() -> Self {
         let _config = AppConfig::load();
         let mut plugin_registry = PluginRegistry::new();
-        
+
         let _ = plugin_registry.register(Box::new(FileManagerPlugin::new()));
         let _ = plugin_registry.register(Box::new(NetworkToolsPlugin::new()));
         let _ = plugin_registry.register(Box::new(ProcessManagerPlugin::new()));
-        
+
         Self {
             command_input: CommandInput::default(),
             output_messages: vec![
@@ -94,6 +94,8 @@ impl HeliosApp {
                     .push("  stats - Show system stats".to_string());
                 self.output_messages
                     .push("  time - Show current time".to_string());
+                self.output_messages
+                    .push("  history [cmd] - Command history".to_string());
                 self.output_messages.push("".to_string());
                 self.output_messages.push("=== AI ===".to_string());
                 self.output_messages
@@ -448,48 +450,156 @@ impl HeliosApp {
                     self.output_messages.push("Loaded Plugins:".to_string());
                     let plugins = self.plugin_registry.list();
                     if plugins.is_empty() {
-                        self.output_messages.push("  No plugins loaded.".to_string());
+                        self.output_messages
+                            .push("  No plugins loaded.".to_string());
                     } else {
                         for p in plugins {
-                            self.output_messages.push(format!("  {} v{} - {}", p.name, p.version, p.description));
-                            self.output_messages.push(format!("    Commands: {:?}", p.commands));
+                            self.output_messages
+                                .push(format!("  {} v{} - {}", p.name, p.version, p.description));
+                            self.output_messages
+                                .push(format!("    Commands: {:?}", p.commands));
                         }
                     }
                 } else if args[0] == "info" {
                     if args.len() < 2 {
-                        self.output_messages.push("Usage: plugin info <name>".to_string());
+                        self.output_messages
+                            .push("Usage: plugin info <name>".to_string());
                     } else {
                         if let Some(p) = self.plugin_registry.get(args[1]) {
                             let info = p.info();
                             self.output_messages.push(format!("Plugin: {}", info.name));
-                            self.output_messages.push(format!("Version: {}", info.version));
-                            self.output_messages.push(format!("Description: {}", info.description));
-                            self.output_messages.push(format!("Commands: {:?}", info.commands));
+                            self.output_messages
+                                .push(format!("Version: {}", info.version));
+                            self.output_messages
+                                .push(format!("Description: {}", info.description));
+                            self.output_messages
+                                .push(format!("Commands: {:?}", info.commands));
                         } else {
-                            self.output_messages.push(format!("Plugin '{}' not found", args[1]));
+                            self.output_messages
+                                .push(format!("Plugin '{}' not found", args[1]));
                         }
                     }
                 } else if args[0] == "run" {
                     if args.len() < 3 {
-                        self.output_messages.push("Usage: plugin run <name> <command> [args...]".to_string());
+                        self.output_messages
+                            .push("Usage: plugin run <name> <command> [args...]".to_string());
                     } else {
                         let plugin_name = args[1];
                         let plugin_cmd = args[2];
                         let plugin_args: Vec<&str> = args[3..].iter().copied().collect();
-                        match self.plugin_registry.execute(plugin_name, plugin_cmd, &plugin_args) {
+                        match self
+                            .plugin_registry
+                            .execute(plugin_name, plugin_cmd, &plugin_args)
+                        {
                             Ok(result) => self.output_messages.push(result),
                             Err(e) => self.output_messages.push(format!("Error: {}", e)),
                         }
                     }
                 } else if args[0] == "commands" {
-                    self.output_messages.push("Available Plugin Commands:".to_string());
+                    self.output_messages
+                        .push("Available Plugin Commands:".to_string());
                     for (name, cmds) in self.plugin_registry.commands() {
                         for cmd in cmds {
                             self.output_messages.push(format!("  {} - {}", cmd, name));
                         }
                     }
                 } else {
-                    self.output_messages.push("Usage: plugin [list|info <name>|run <name> <command>|commands]".to_string());
+                    self.output_messages.push(
+                        "Usage: plugin [list|info <name>|run <name> <command>|commands]"
+                            .to_string(),
+                    );
+                }
+            }
+            Some(&"history") | Some(&"hist") => {
+                let args: Vec<&str> = parts[1..].iter().copied().collect();
+
+                if args.is_empty() || args[0] == "list" {
+                    let history = self.command_input.get_history_list(Some(20));
+                    if history.is_empty() {
+                        self.output_messages.push("No command history.".to_string());
+                    } else {
+                        self.output_messages
+                            .push("Command History (last 20):".to_string());
+                        for (i, (cmd, time)) in history.iter().enumerate() {
+                            self.output_messages
+                                .push(format!("  {}  [{}]  {}", i + 1, time, cmd));
+                        }
+                    }
+                } else if args[0] == "search" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: history search <query>".to_string());
+                    } else {
+                        let query = args[1..].join(" ");
+                        self.command_input.search_history(&query);
+                        let count = self.command_input.get_search_results_count();
+                        if count == 0 {
+                            self.output_messages
+                                .push(format!("No matches found for '{}'", query));
+                        } else {
+                            self.output_messages
+                                .push(format!("Found {} matches for '{}':", count, query));
+                            for i in 0..count.min(10) {
+                                if let Some(idx) = self.command_input.search_results.get(i) {
+                                    if let Some(entry) = self.command_input.history.get(*idx) {
+                                        self.output_messages.push(format!(
+                                            "  {}. {}",
+                                            i + 1,
+                                            entry.command
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else if args[0] == "clear" {
+                    self.command_input.clear_history();
+                    self.output_messages
+                        .push("Command history cleared.".to_string());
+                } else if args[0] == "category" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: history category <name>".to_string());
+                        self.output_messages.push(
+                            "Categories: general, files, network, system, ai, settings, plugins"
+                                .to_string(),
+                        );
+                    } else {
+                        let commands = self.command_input.get_history_by_category(args[1]);
+                        if commands.is_empty() {
+                            self.output_messages
+                                .push(format!("No commands in category '{}'.", args[1]));
+                        } else {
+                            self.output_messages
+                                .push(format!("Commands in '{}':", args[1]));
+                            for cmd in commands.iter().take(20) {
+                                self.output_messages.push(format!("  {}", cmd));
+                            }
+                        }
+                    }
+                } else if args[0] == "stat" {
+                    self.output_messages.push("History Statistics:".to_string());
+                    self.output_messages.push(format!(
+                        "  Total commands: {}",
+                        self.command_input.history.len()
+                    ));
+                    self.output_messages
+                        .push(format!("  Max size: {}", self.command_input.max_history));
+
+                    let categories = [
+                        "general", "files", "network", "system", "ai", "settings", "plugins",
+                    ];
+                    for cat in categories {
+                        let count = self.command_input.get_history_by_category(cat).len();
+                        if count > 0 {
+                            self.output_messages.push(format!("  {}: {}", cat, count));
+                        }
+                    }
+                } else {
+                    self.output_messages.push(
+                        "Usage: history [list|search <query>|clear|category <name>|stat]"
+                            .to_string(),
+                    );
                 }
             }
             _ => {
