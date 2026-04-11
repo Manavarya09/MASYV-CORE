@@ -7,7 +7,7 @@ mod ui;
 
 use ai::{AiProvider, OllamaClient};
 use commands::{parse_file_command, parse_network_command, parse_system_command};
-use commands::{AliasManager, CommandInput};
+use commands::{AliasManager, CommandInput, EnvManager};
 use config::AppConfig;
 use eframe::egui;
 use plugins::{FileManagerPlugin, NetworkToolsPlugin, PluginRegistry, ProcessManagerPlugin};
@@ -26,6 +26,7 @@ pub struct HeliosApp {
     config: AppConfig,
     plugin_registry: PluginRegistry,
     alias_manager: AliasManager,
+    env_manager: EnvManager,
 }
 
 impl Default for HeliosApp {
@@ -33,6 +34,7 @@ impl Default for HeliosApp {
         let _config = AppConfig::load();
         let mut plugin_registry = PluginRegistry::new();
         let alias_manager = AliasManager::new();
+        let env_manager = EnvManager::new();
 
         let _ = plugin_registry.register(Box::new(FileManagerPlugin::new()));
         let _ = plugin_registry.register(Box::new(NetworkToolsPlugin::new()));
@@ -53,6 +55,7 @@ impl Default for HeliosApp {
             config: AppConfig::load(),
             plugin_registry,
             alias_manager,
+            env_manager,
         }
     }
 }
@@ -112,6 +115,8 @@ impl HeliosApp {
                     .push("  history [cmd] - Command history".to_string());
                 self.output_messages
                     .push("  alias [cmd] - Command aliases".to_string());
+                self.output_messages
+                    .push("  env [cmd] - Environment variables".to_string());
                 self.output_messages.push("".to_string());
                 self.output_messages.push("=== AI ===".to_string());
                 self.output_messages
@@ -712,6 +717,135 @@ impl HeliosApp {
                     ));
                 } else {
                     self.output_messages.push("Usage: alias [list|create <name> <cmd>|delete <name>|info <name>|search <prefix>|stat]".to_string());
+                }
+            }
+            Some(&"env") | Some(&"set") | Some(&"unset") => {
+                let cmd_name = parts[0];
+
+                if cmd_name == "set" && (parts.len() == 1 || (parts.len() == 2 && parts[1] == "")) {
+                    self.output_messages
+                        .push("Usage: set VAR=value or set VAR value".to_string());
+                    return;
+                }
+
+                if cmd_name == "unset" && parts.len() < 2 {
+                    self.output_messages
+                        .push("Usage: unset <variable>".to_string());
+                    return;
+                }
+
+                let is_set_cmd = cmd_name == "set";
+                let is_unset_cmd = cmd_name == "unset";
+
+                if is_unset_cmd {
+                    if let Some(val) = self.env_manager.unset(parts[1]) {
+                        self.output_messages
+                            .push(format!("Unset: {}={}", parts[1], val));
+                    } else {
+                        self.output_messages
+                            .push(format!("Variable '{}' not found", parts[1]));
+                    }
+                } else if is_set_cmd || cmd_name == "env" {
+                    let args: Vec<&str> = parts[1..].iter().copied().collect();
+
+                    if args.is_empty() || (args.len() == 1 && args[0] == "list") {
+                        let env_vars = self.env_manager.list();
+                        self.output_messages
+                            .push("Environment Variables:".to_string());
+                        let limit = 30.min(env_vars.len());
+                        for (key, value) in env_vars.iter().take(limit) {
+                            let display_value = if value.len() > 50 {
+                                format!("{}...", &value[..47])
+                            } else {
+                                value.clone()
+                            };
+                            self.output_messages
+                                .push(format!("  {}={}", key, display_value));
+                        }
+                        if env_vars.len() > 30 {
+                            self.output_messages
+                                .push(format!("  ... and {} more", env_vars.len() - 30));
+                        }
+                    } else if args[0] == "get" {
+                        if args.len() < 2 {
+                            self.output_messages
+                                .push("Usage: env get <variable>".to_string());
+                        } else {
+                            match self.env_manager.get(args[1]) {
+                                Some(value) => {
+                                    self.output_messages.push(format!("{}={}", args[1], value))
+                                }
+                                None => self
+                                    .output_messages
+                                    .push(format!("Variable '{}' not found", args[1])),
+                            }
+                        }
+                    } else if args[0] == "set" {
+                        if args.len() < 3 {
+                            self.output_messages
+                                .push("Usage: env set VAR value".to_string());
+                        } else {
+                            let var_name = args[1].to_string();
+                            let var_value = args[2..].join(" ");
+                            self.env_manager.set(var_name.clone(), var_value.clone());
+                            self.output_messages
+                                .push(format!("Set: {}={}", var_name, var_value));
+                        }
+                    } else if args[0] == "unset" {
+                        if args.len() < 2 {
+                            self.output_messages
+                                .push("Usage: env unset <variable>".to_string());
+                        } else {
+                            if let Some(val) = self.env_manager.unset(args[1]) {
+                                self.output_messages
+                                    .push(format!("Unset: {}={}", args[1], val));
+                            } else {
+                                self.output_messages
+                                    .push(format!("Variable '{}' not found", args[1]));
+                            }
+                        }
+                    } else if args[0] == "search" {
+                        if args.len() < 2 {
+                            self.output_messages
+                                .push("Usage: env search <pattern>".to_string());
+                        } else {
+                            let results = self.env_manager.list_filtered(args[1]);
+                            if results.is_empty() {
+                                self.output_messages
+                                    .push(format!("No variables matching '{}'", args[1]));
+                            } else {
+                                self.output_messages
+                                    .push(format!("Matching variables for '{}':", args[1]));
+                                for (key, value) in results.iter().take(20) {
+                                    self.output_messages.push(format!("  {}={}", key, value));
+                                }
+                            }
+                        }
+                    } else if args[0] == "path" {
+                        let path_entries = self.env_manager.get_path();
+                        self.output_messages.push("PATH entries:".to_string());
+                        for (i, p) in path_entries.iter().enumerate() {
+                            self.output_messages.push(format!("  {}: {}", i + 1, p));
+                        }
+                    } else if args[0] == "export" {
+                        self.env_manager.export_to_env();
+                        self.output_messages
+                            .push("Environment exported to system.".to_string());
+                    } else if args[0] == "expand" {
+                        if args.len() < 2 {
+                            self.output_messages
+                                .push("Usage: env expand <text>".to_string());
+                        } else {
+                            let expanded = self.env_manager.expand(args[1]);
+                            self.output_messages.push(format!("Expanded: {}", expanded));
+                        }
+                    } else if is_set_cmd {
+                        let var_name = args[0].to_string();
+                        let var_value = args[1..].join(" ");
+                        self.env_manager.set(var_name, var_value);
+                    } else {
+                        self.output_messages.push("Usage: env [list|get <var>|set <var> <val>|unset <var>|search <pattern>|path|expand <text>]".to_string());
+                    }
                 }
             }
             _ => {
