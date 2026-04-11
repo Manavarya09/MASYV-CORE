@@ -6,8 +6,8 @@ mod system;
 mod ui;
 
 use ai::{AiProvider, OllamaClient};
-use commands::CommandInput;
 use commands::{parse_file_command, parse_network_command, parse_system_command};
+use commands::{AliasManager, CommandInput};
 use config::AppConfig;
 use eframe::egui;
 use plugins::{FileManagerPlugin, NetworkToolsPlugin, PluginRegistry, ProcessManagerPlugin};
@@ -25,12 +25,14 @@ pub struct HeliosApp {
     ui_state: UiState,
     config: AppConfig,
     plugin_registry: PluginRegistry,
+    alias_manager: AliasManager,
 }
 
 impl Default for HeliosApp {
     fn default() -> Self {
         let _config = AppConfig::load();
         let mut plugin_registry = PluginRegistry::new();
+        let alias_manager = AliasManager::new();
 
         let _ = plugin_registry.register(Box::new(FileManagerPlugin::new()));
         let _ = plugin_registry.register(Box::new(NetworkToolsPlugin::new()));
@@ -50,6 +52,7 @@ impl Default for HeliosApp {
             ui_state: UiState::default(),
             config: AppConfig::load(),
             plugin_registry,
+            alias_manager,
         }
     }
 }
@@ -74,9 +77,20 @@ impl HeliosApp {
             return;
         }
 
-        self.output_messages.push(format!("> {}", command));
-
         let parts: Vec<&str> = cmd.split_whitespace().collect();
+        let first_word = parts.first().unwrap_or(&"");
+
+        if let Some(resolved) = self.alias_manager.resolve(first_word) {
+            let rest = if parts.len() > 1 {
+                format!("{} {}", resolved, parts[1..].join(" "))
+            } else {
+                resolved
+            };
+            self.execute_command(&rest);
+            return;
+        }
+
+        self.output_messages.push(format!("> {}", command));
 
         match parts.first() {
             Some(&"help") => {
@@ -96,6 +110,8 @@ impl HeliosApp {
                     .push("  time - Show current time".to_string());
                 self.output_messages
                     .push("  history [cmd] - Command history".to_string());
+                self.output_messages
+                    .push("  alias [cmd] - Command aliases".to_string());
                 self.output_messages.push("".to_string());
                 self.output_messages.push("=== AI ===".to_string());
                 self.output_messages
@@ -600,6 +616,102 @@ impl HeliosApp {
                         "Usage: history [list|search <query>|clear|category <name>|stat]"
                             .to_string(),
                     );
+                }
+            }
+            Some(&"alias") => {
+                let args: Vec<&str> = parts[1..].iter().copied().collect();
+
+                if args.is_empty() || args[0] == "list" {
+                    let aliases = self.alias_manager.list();
+                    if aliases.is_empty() {
+                        self.output_messages.push(
+                            "No aliases defined. Use 'alias create <name> <command>' to add."
+                                .to_string(),
+                        );
+                    } else {
+                        self.output_messages.push("Defined Aliases:".to_string());
+                        for a in aliases {
+                            self.output_messages
+                                .push(format!("  {} -> {}", a.name, a.command));
+                        }
+                    }
+                } else if args[0] == "create" {
+                    if args.len() < 3 {
+                        self.output_messages
+                            .push("Usage: alias create <name> <command>".to_string());
+                    } else {
+                        let name = args[1].to_string();
+                        let command = args[2..].join(" ");
+                        match self.alias_manager.create(name.clone(), command, None) {
+                            Ok(()) => self
+                                .output_messages
+                                .push(format!("Alias '{}' created.", name)),
+                            Err(e) => self.output_messages.push(format!("Error: {}", e)),
+                        }
+                    }
+                } else if args[0] == "delete" || args[0] == "remove" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: alias delete <name>".to_string());
+                    } else {
+                        match self.alias_manager.delete(args[1]) {
+                            Ok(()) => self
+                                .output_messages
+                                .push(format!("Alias '{}' deleted.", args[1])),
+                            Err(e) => self.output_messages.push(format!("Error: {}", e)),
+                        }
+                    }
+                } else if args[0] == "info" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: alias info <name>".to_string());
+                    } else {
+                        match self.alias_manager.get(args[1]) {
+                            Some(a) => {
+                                self.output_messages.push(format!("Alias: {}", a.name));
+                                self.output_messages
+                                    .push(format!("  Command: {}", a.command));
+                                self.output_messages
+                                    .push(format!("  Uses: {}", a.use_count));
+                            }
+                            None => self
+                                .output_messages
+                                .push(format!("Alias '{}' not found.", args[1])),
+                        }
+                    }
+                } else if args[0] == "search" {
+                    if args.len() < 2 {
+                        self.output_messages
+                            .push("Usage: alias search <prefix>".to_string());
+                    } else {
+                        let matches = self.alias_manager.find_by_prefix(args[1]);
+                        if matches.is_empty() {
+                            self.output_messages
+                                .push(format!("No aliases starting with '{}'.", args[1]));
+                        } else {
+                            self.output_messages
+                                .push(format!("Aliases starting with '{}':", args[1]));
+                            for a in matches {
+                                self.output_messages
+                                    .push(format!("  {} -> {}", a.name, a.command));
+                            }
+                        }
+                    }
+                } else if args[0] == "stat" {
+                    let (total, has_most_used, names) = self.alias_manager.get_stats();
+                    self.output_messages.push("Alias Statistics:".to_string());
+                    self.output_messages
+                        .push(format!("  Total aliases: {}", total));
+                    self.output_messages.push(format!(
+                        "  All aliases: {}",
+                        if names.is_empty() {
+                            "none".to_string()
+                        } else {
+                            names
+                        }
+                    ));
+                } else {
+                    self.output_messages.push("Usage: alias [list|create <name> <cmd>|delete <name>|info <name>|search <prefix>|stat]".to_string());
                 }
             }
             _ => {
