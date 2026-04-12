@@ -1383,6 +1383,38 @@ impl eframe::App for HeliosApp {
                                 format!("{:.1}C", self.jarvis.core_temp),
                             );
 
+                            ui.add_space(15.0);
+
+                            ui.colored_label(egui::Color32::from_rgb(100, 200, 255), "DISK I/O");
+                            let disk_data = self.realtime_graphs.disk.get_normalized();
+                            for val in disk_data.iter().take(25) {
+                                let bar_height = (val * 15.0) as usize;
+                                ui.colored_label(
+                                    egui::Color32::from_rgb(100, 200, 255),
+                                    "█".repeat(bar_height + 1),
+                                );
+                            }
+                            ui.colored_label(
+                                egui::Color32::GOLD,
+                                format!("{:.1}%", self.realtime_graphs.disk.avg_val),
+                            );
+
+                            ui.add_space(15.0);
+
+                            ui.colored_label(egui::Color32::from_rgb(255, 100, 200), "GPU LOAD");
+                            let gpu_data = self.realtime_graphs.gpu.get_normalized();
+                            for val in gpu_data.iter().take(25) {
+                                let bar_height = (val * 15.0) as usize;
+                                ui.colored_label(
+                                    egui::Color32::from_rgb(255, 100, 200),
+                                    "█".repeat(bar_height + 1),
+                                );
+                            }
+                            ui.colored_label(
+                                egui::Color32::GOLD,
+                                format!("{:.1}%", self.realtime_graphs.gpu.avg_val),
+                            );
+
                             ui.add_space(10.0);
                         });
                 });
