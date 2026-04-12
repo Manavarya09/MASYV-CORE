@@ -1,12 +1,12 @@
-# HELIOS - Modern Command System
+# HELIOS - Futuristic Command System
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-0.2.0-blue)
+![Version](https://img.shields.io/badge/version-0.6.0-blue)
 ![Rust](https://img.shields.io/badge/Rust-1.75+-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-HELIOS is a modern, AI-powered command system built with Rust and eframe/egui. It provides a professional GUI interface with extensive command capabilities, AI integration, and plugin support.
+HELIOS is a futuristic, AI-powered command system built with Rust and eframe/egui. It provides a professional GUI interface with real-time metrics, JARVIS AI core, neon styling, and extensive command capabilities.
 
 </div>
 
@@ -23,15 +23,19 @@ HELIOS is a modern, AI-powered command system built with Rust and eframe/egui. I
 - Chat History - conversation context
 - Real-time Responses - streaming AI assistance
 
-### UI/UX
-- 5 Themes - Dark, Light, Cyberpunk, Ocean, Forest
+### UI/UX (Futuristic)
+- 7 Themes - Dark, Light, Cyberpunk, Ocean, Forest, Neon, Matrix
+- Neon Styling - glowing borders, colored progress bars
+- Real-Time Graphs - CPU, Memory, Network, Power, GPU, Disk
+- JARVIS Core - system status with encryption, shield, integrity
 - Keyboard Shortcuts - press ? for help
-- Professional Interface - clean 3-panel layout
+- 5-Panel Layout - Navigation, Metrics, Status, Console, Actions
 
 ### Advanced Features
 - Plugin System - extensible architecture
 - Persistent Config - JSON-based settings
-- API Server Mode - remote access (coming soon)
+- Alert System - critical/warning/info alerts
+- Sparkline Graphs - ASCII visualization
 
 ## Quick Start
 

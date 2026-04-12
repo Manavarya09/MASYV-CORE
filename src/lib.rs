@@ -18,6 +18,8 @@ use plugins::{FileManagerPlugin, NetworkToolsPlugin, PluginRegistry, ProcessMana
 use system::SystemStats;
 use ui::{AlertManager, RealtimeGraph, Theme, UiState};
 
+const VERSION: &str = "v0.6.0";
+
 pub struct HeliosApp {
     command_input: CommandInput,
     output_messages: Vec<String>,
@@ -1213,7 +1215,7 @@ impl eframe::App for HeliosApp {
                         .show(ui, |ui| {
                             ui.add_space(10.0);
                             ui.heading("HELIOS");
-                            ui.colored_label(egui::Color32::GOLD, "v0.5.0 | JARVIS CORE");
+                            ui.colored_label(egui::Color32::GOLD, "v0.6.0 | JARVIS CORE");
                             ui.separator();
                             
                             let categories = [
@@ -1464,29 +1466,24 @@ impl eframe::App for HeliosApp {
 
                             ui.colored_label(neon_cyan, "* JARVIS ACTIVE *");
                             ui.add_space(8.0);
-
-                            let mode_color = match self.jarvis.system_mode.as_str() {
-                                "STANDBY" => egui::Color32::GRAY,
-                                "ACTIVE" => neon_cyan,
-                                "HIGH ALERT" => egui::Color32::RED,
-                                _ => egui::Color32::WHITE,
-                            };
-                            ui.colored_label(
-                                mode_color,
-                                format!("MODE: {}", self.jarvis.system_mode),
-                            );
-
+                            
+                            ui.colored_label(neon_cyan, format!("{} {}", self.jarvis.get_status_emoji(), self.jarvis.system_mode));
+                            ui.add_space(5.0);
+                            
+                            ui.colored_label(egui::Color32::from_rgb(0, 200, 100), format!("SHIELD: {}", self.jarvis.shield_status));
+                            ui.colored_label(egui::Color32::from_rgb(100, 150, 255), format!("ENCRYPTION: {}", self.jarvis.encryption_level));
+                            
                             let threat_color = match self.jarvis.threat_level.as_str() {
+                                "NONE" => neon_cyan,
                                 "LOW" => neon_cyan,
                                 "MEDIUM" => egui::Color32::YELLOW,
                                 "HIGH" => egui::Color32::RED,
                                 _ => egui::Color32::WHITE,
                             };
-                            ui.colored_label(
-                                threat_color,
-                                format!("THREAT: {}", self.jarvis.threat_level),
-                            );
-
+                            ui.colored_label(threat_color, format!("THREAT: {}", self.jarvis.threat_level));
+                            
+                            ui.colored_label(egui::Color32::from_rgb(0, 200, 100), format!("INTEGRITY: {:.1}%", self.jarvis.system_integrity));
+                            
                             ui.colored_label(
                                 egui::Color32::from_rgb(0, 200, 100),
                                 format!("SECURITY: {}", self.jarvis.security_status),
