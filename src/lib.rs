@@ -1198,7 +1198,7 @@ impl eframe::App for HeliosApp {
                     });
             }
 
-            ui.columns(4, |columns| {
+            ui.columns(5, |columns| {
                 columns[0].vertical(|ui| {
                     ui.add_space(10.0);
 
@@ -1213,9 +1213,9 @@ impl eframe::App for HeliosApp {
                         .show(ui, |ui| {
                             ui.add_space(10.0);
                             ui.heading("HELIOS");
-                            ui.colored_label(neon_cyan, "v0.4.0 | JARVIS CORE");
+                            ui.colored_label(egui::Color32::GOLD, "v0.5.0 | JARVIS CORE");
                             ui.separator();
-
+                            
                             let categories = [
                                 ("MAIN", true),
                                 ("AI ENGINE", false),
@@ -1224,27 +1224,25 @@ impl eframe::App for HeliosApp {
                                 ("SYSTEM", false),
                                 ("CONFIG", false),
                             ];
-                            for (cat, active) in categories.iter() {
+                            for (cat, _active) in categories.iter() {
                                 let selected = self.selected_category
                                     == categories.iter().position(|(s, _)| s == cat).unwrap_or(0);
                                 ui.add_space(5.0);
-                                if *active {
-                                    ui.colored_label(neon_cyan, format!("> {}", cat));
-                                } else if ui.selectable_label(selected, *cat).clicked() {
+                                if ui.selectable_label(selected, *cat).clicked() {
                                     self.selected_category =
                                         categories.iter().position(|(s, _)| s == cat).unwrap_or(0);
                                 }
                             }
                         });
 
-                    ui.add_space(15.0);
+                    ui.add_space(10.0);
 
                     egui::Frame::default()
                         .fill(dark_bg)
                         .stroke(egui::Stroke::new(1.5, neon_pink))
                         .corner_radius(8.0)
                         .show(ui, |ui| {
-                            ui.add_space(10.0);
+                            ui.add_space(8.0);
                             ui.colored_label(egui::Color32::GOLD, "SYSTEM METRICS");
                             ui.separator();
                             ui.add_space(5.0);
@@ -1252,29 +1250,57 @@ impl eframe::App for HeliosApp {
                             self.system_stats.refresh();
                             let cpu = self.system_stats.cpu_usage();
                             let mem = self.system_stats.memory_percent();
+                            let procs = self.system_stats.system.processes().len();
 
                             ui.label(format!("CPU: {:.0}%", cpu));
                             ui.add(
                                 egui::ProgressBar::new(cpu / 100.0)
-                                    .desired_width(120.0)
-                                    .fill(egui::Color32::from_rgb(0, 255, 200)),
+                                    .desired_width(100.0)
+                                    .fill(if cpu > 80.0 { egui::Color32::RED } else { neon_cyan }),
                             );
 
-                            ui.add_space(8.0);
+                            ui.add_space(5.0);
                             ui.label(format!("MEM: {:.0}%", mem));
                             ui.add(
                                 egui::ProgressBar::new(mem / 100.0)
-                                    .desired_width(120.0)
+                                    .desired_width(100.0)
                                     .fill(egui::Color32::from_rgb(100, 100, 255)),
                             );
 
-                            ui.add_space(8.0);
-                            ui.label(format!(
-                                "PROCS: {}",
-                                self.system_stats.system.processes().len()
-                            ));
+                            ui.add_space(5.0);
+                            ui.label(format!("PROCS: {}", procs));
                             ui.label(format!("UPTIME: {}", self.system_stats.uptime()));
-                            ui.add_space(10.0);
+                            ui.add_space(5.0);
+                        });
+
+                    ui.add_space(10.0);
+
+                    egui::Frame::default()
+                        .fill(dark_bg)
+                        .stroke(egui::Stroke::new(1.5, egui::Color32::from_rgb(255, 200, 0)))
+                        .corner_radius(8.0)
+                        .show(ui, |ui| {
+                            ui.add_space(8.0);
+                            ui.colored_label(egui::Color32::from_rgb(255, 200, 0), "QUICK ACTIONS");
+                            ui.separator();
+                            ui.add_space(5.0);
+                            
+                            if ui.button("Clear Output").clicked() {
+                                self.output_messages.clear();
+                            }
+                            if ui.button("Refresh Stats").clicked() {
+                                self.system_stats.refresh();
+                            }
+                            if ui.button("Theme Cycle").clicked() {
+                                let themes = Theme::all();
+                                let current_idx = themes.iter().position(|t| *t == self.ui_state.theme).unwrap_or(0);
+                                let next_idx = (current_idx + 1) % themes.len();
+                                self.ui_state.theme = themes[next_idx].clone();
+                            }
+                            if ui.button("Help").clicked() {
+                                self.output_messages.push("HELIOS Commands: help, ai, files, network, system, config, todo, note, calc".to_string());
+                            }
+                            ui.add_space(5.0);
                         });
                 });
 
