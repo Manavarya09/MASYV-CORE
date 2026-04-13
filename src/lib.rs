@@ -9,8 +9,9 @@ mod security;
 mod system;
 mod ui;
 
-use ai::{AiProvider, HolographicAI, OllamaClient};
-use automation::{MacroAction, MacroSystem, ScheduleType, TaskScheduler};
+use ai::client::AiProvider;
+use ai::{HolographicAI, OllamaClient};
+use automation::{MacroSystem, TaskScheduler};
 use commands::{parse_file_command, parse_network_command, parse_system_command};
 use commands::{
     AliasManager, Calculator, CommandInput, EnvManager, NotesManager, TodoManager, VoiceSystem,
@@ -24,7 +25,7 @@ use security::{EncryptionSystem, SecurityScanner, SeverityLevel};
 use system::SystemStats;
 use ui::{AlertManager, RealtimeGraph, Theme, UiState};
 
-const VERSION: &str = "v0.6.0";
+pub const VERSION: &str = "v0.8.0";
 
 pub struct HeliosApp {
     command_input: CommandInput,
@@ -77,7 +78,7 @@ impl Default for HeliosApp {
         Self {
             command_input: CommandInput::default(),
             output_messages: vec![
-                "HELIOS v0.7.0 Advanced AI Command System".to_string(),
+                format!("HELIOS {} Advanced AI Command System", VERSION).to_string(),
                 "Type 'help' for command reference".to_string(),
                 "Use 'ai chat' for holographic AI mode".to_string(),
             ],
@@ -1341,9 +1342,8 @@ impl HeliosApp {
                         Err(e) => self.output_messages.push(format!("Error: {}", e)),
                     }
                 } else if args[0] == "keys" {
-                    self.encryption.generate_keys();
                     self.output_messages
-                        .push("Encryption keys generated".to_string());
+                        .push("Encryption keys not available in this version".to_string());
                 } else {
                     self.output_messages.push("Usage: encrypt [status|on|off|encrypt <data> <key>|decrypt <id> <key>|keys]".to_string());
                 }
@@ -1367,15 +1367,17 @@ impl HeliosApp {
                 } else if args[0] == "list" {
                     self.output_messages.push("Vulnerabilities:".to_string());
                     for vuln in &self.security_scanner.vulnerabilities {
-                        let severity = match vuln.severity {
-                            SeverityLevel::Critical => "[CRITICAL]",
-                            SeverityLevel::High => "[HIGH]",
-                            SeverityLevel::Medium => "[MEDIUM]",
-                            SeverityLevel::Low => "[LOW]",
-                            SeverityLevel::Info => "[INFO]",
+                        let severity_str = match vuln.severity {
+                            SeverityLevel::Critical => "CRITICAL",
+                            SeverityLevel::High => "HIGH",
+                            SeverityLevel::Medium => "MEDIUM",
+                            SeverityLevel::Low => "LOW",
+                            SeverityLevel::Info => "INFO",
                         };
-                        self.output_messages
-                            .push(format!("{} {} - {}", severity, vuln.id, vuln.description));
+                        self.output_messages.push(format!(
+                            "[{}] {} - {}",
+                            severity_str, vuln.id, vuln.description
+                        ));
                     }
                 } else {
                     self.output_messages
@@ -1406,9 +1408,7 @@ impl HeliosApp {
                     let name = args[1].to_string();
                     let command = args[2].to_string();
                     let interval: u64 = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(60);
-                    let id =
-                        self.scheduler
-                            .add_task(name, command, ScheduleType::Interval, interval);
+                    let id = self.scheduler.add_task(name, command, interval);
                     self.output_messages.push(format!("Task created: {}", id));
                 } else if args[0] == "enable" && args.len() > 1 {
                     if self.scheduler.enable_task(args[1]) {

@@ -6,9 +6,7 @@ pub struct EncryptionSystem {
     pub enabled: bool,
     pub algorithm: String,
     pub key_size: usize,
-    pub encrypted_data: HashMap<String, String>,
-    pub public_key: Option<String>,
-    pub private_key: Option<String>,
+    encrypted_data: HashMap<String, String>,
 }
 
 impl EncryptionSystem {
@@ -18,8 +16,6 @@ impl EncryptionSystem {
             algorithm: "AES-256-GCM".to_string(),
             key_size: 256,
             encrypted_data: HashMap::new(),
-            public_key: None,
-            private_key: None,
         }
     }
 
@@ -71,14 +67,9 @@ impl EncryptionSystem {
         String::from_utf8(decrypted).map_err(|e| format!("UTF-8 error: {}", e))
     }
 
-    pub fn generate_keys(&mut self) {
-        self.public_key = Some("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...".to_string());
-        self.private_key = Some("MIIEogIBAAKCAQEA...".to_string());
-    }
-
     pub fn get_info(&self) -> String {
         format!(
-            "Encryption: {} | Algorithm: {} | Key Size: {} bits | Encrypted Items: {}",
+            "Encryption: {} | Algorithm: {} | Key Size: {} bits | Items: {}",
             if self.enabled { "ACTIVE" } else { "DISABLED" },
             self.algorithm,
             self.key_size,
@@ -158,10 +149,8 @@ fn base64_decode(data: &str) -> Result<Vec<u8>, String> {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityScanner {
-    pub last_scan: u64,
-    pub vulnerabilities: Vec<Vulnerability>,
-    pub scan_depth: ScanDepth,
     pub active: bool,
+    pub vulnerabilities: Vec<Vulnerability>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -182,31 +171,17 @@ pub enum SeverityLevel {
     Info,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub enum ScanDepth {
-    Quick,
-    Standard,
-    Deep,
-    Full,
-}
-
 impl SecurityScanner {
     pub fn new() -> Self {
         Self {
-            last_scan: 0,
-            vulnerabilities: Vec::new(),
-            scan_depth: ScanDepth::Standard,
             active: false,
+            vulnerabilities: Vec::new(),
         }
     }
 
     pub fn start_scan(&mut self) {
         self.active = true;
         self.vulnerabilities.clear();
-        self.last_scan = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
 
         self.vulnerabilities.push(Vulnerability {
             id: "VULN-001".to_string(),
@@ -228,24 +203,12 @@ impl SecurityScanner {
             .iter()
             .filter(|v| v.severity == SeverityLevel::High)
             .count();
-        let medium = self
-            .vulnerabilities
-            .iter()
-            .filter(|v| v.severity == SeverityLevel::Medium)
-            .count();
-        let low = self
-            .vulnerabilities
-            .iter()
-            .filter(|v| v.severity == SeverityLevel::Low)
-            .count();
 
         format!(
-            "Security Scan: {} | Critical: {} | High: {} | Medium: {} | Low: {}",
+            "Security: {} | Critical: {} | High: {}",
             if self.active { "SCANNING" } else { "IDLE" },
             critical,
-            high,
-            medium,
-            low
+            high
         )
     }
 }
