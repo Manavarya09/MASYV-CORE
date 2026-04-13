@@ -847,7 +847,7 @@ impl HeliosApp {
                         }
                     }
                 } else if args[0] == "stat" {
-                    let (total, has_most_used, names) = self.alias_manager.get_stats();
+                    let (total, _has_most_used, names) = self.alias_manager.get_stats();
                     self.output_messages.push("Alias Statistics:".to_string());
                     self.output_messages
                         .push(format!("  Total aliases: {}", total));
@@ -1307,7 +1307,7 @@ impl HeliosApp {
                             .push("Invalid volume. Use: voice volume <0-100>".to_string());
                     }
                 } else if args[0] == "say" {
-                    let text = args[1..].join(" ");
+                    let _text = args[1..].join(" ");
                     self.voice_system.speak(&text);
                     self.output_messages.push(format!("Speaking: {}", text));
                 } else {
@@ -1901,7 +1901,7 @@ impl eframe::App for HeliosApp {
                             } else {
                                 "EXECUTE"
                             };
-                            let btn_color = if self.is_processing {
+                            let _btn_color = if self.is_processing {
                                 egui::Color32::YELLOW
                             } else {
                                 neon_cyan
