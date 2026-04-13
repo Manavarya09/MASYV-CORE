@@ -13,13 +13,13 @@
 
 A futuristic, AI-powered command system built with **Rust** and **egui**. HELIOS provides a professional GUI interface with real-time system metrics, JARVIS AI core, neon styling, and extensive command capabilities.
 
-[🚀 Quick Start](#quick-start) • [📖 Documentation](#documentation) • [🤝 Contributing](#contributing) • [💬 Discussions](#discussions)
+[Quick Start](#quick-start) - [Documentation](#documentation) - [Contributing](#contributing) - [Discussions](#discussions)
 
 </div>
 
 ---
 
-## 🌟 Features
+## Features
 
 ### Core Features
 - **File Operations** - ls, cd, pwd, read, write, mkdir, delete with full shell integration
@@ -53,7 +53,7 @@ A futuristic, AI-powered command system built with **Rust** and **egui**. HELIOS
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Rust 1.75+ 
@@ -82,7 +82,7 @@ docker run -p 8080:8080 helios
 
 ---
 
-## 📖 Documentation
+## Documentation
 
 ### Command Reference
 
@@ -139,19 +139,19 @@ docker run -p 8080:8080 helios
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
 | `?` | Show help overlay |
 | `T` | Cycle theme |
 | `Esc` | Close overlay |
-| `↑` / `↓` | Navigate command history |
+| `Arrow Up/Down` | Navigate command history |
 | `Enter` | Execute command |
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 HELIOS/
@@ -174,9 +174,9 @@ HELIOS/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
+Contributions are welcome. Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -186,33 +186,31 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 
 ---
 
-## 💬 Discussions
+## Discussions
 
 Join our [GitHub Discussions](https://github.com/Manavarya09/HELIOS/discussions) for:
-- **Q&A** - Ask and answer questions
-- **Ideas** - Suggest new features
-- **Show and Tell** - Share your projects
+- Q and A - Ask and answer questions
+- Ideas - Suggest new features
+- Show and Tell - Share your projects
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [egui](https://github.com/emilk/egui) - Immediate mode GUI
 - [Ollama](https://github.com/ollama/ollama) - Local AI
 - [Rust](https://www.rust-lang.org/) - Systems programming
 
----
-
 <div align="center">
 
-**[⭐ Star us](https://github.com/Manavarya09/HELIOS/stargazers)** if you find this project useful!
+**Star us** if you find this project useful!
 
-*Built with ❤️ using Rust*
+*Built with love using Rust*
 
 </div>
