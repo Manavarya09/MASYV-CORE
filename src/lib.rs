@@ -1307,7 +1307,7 @@ impl HeliosApp {
                             .push("Invalid volume. Use: voice volume <0-100>".to_string());
                     }
                 } else if args[0] == "say" {
-                    let text = args[1..].join(" ");
+                    let _text = args[1..].join(" ");
                     self.voice_system.speak(&text);
                     self.output_messages.push(format!("Speaking: {}", text));
                 } else {
