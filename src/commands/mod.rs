@@ -17,5 +17,5 @@ pub use input::CommandInput;
 pub use network::parse_network_command;
 pub use notes::NotesManager;
 pub use system_cmds::parse_system_command;
-pub use todo::{TodoItem, TodoManager};
+pub use todo::TodoManager;
 pub use voice::{VoiceConfig, VoiceMode, VoiceSystem};
