@@ -11,6 +11,12 @@ pub struct JarviState {
     pub processing_load: f32,
     pub active_connections: usize,
     pub alerts: Vec<String>,
+    pub encryption_level: String,
+    pub system_integrity: f32,
+    pub shield_status: String,
+    pub last_scan: String,
+    pub cpu_cores: usize,
+    pub gpu_usage: f32,
 }
 
 impl JarviState {
@@ -27,6 +33,12 @@ impl JarviState {
             processing_load: 25.0,
             active_connections: 7,
             alerts: Vec::new(),
+            encryption_level: "AES-256".to_string(),
+            system_integrity: 99.9,
+            shield_status: "ACTIVE".to_string(),
+            last_scan: "Clean".to_string(),
+            cpu_cores: 8,
+            gpu_usage: 35.0,
         }
     }
 
@@ -42,6 +54,8 @@ impl JarviState {
         self.core_temp = 40.0 + (time.sin().abs() * 8.0);
         self.memory_usage = 35.0 + (time.sin().abs() * 15.0);
         self.processing_load = 20.0 + (time.cos().abs() * 20.0);
+        self.system_integrity = 98.0 + (time.sin().abs() * 2.0);
+        self.gpu_usage = 30.0 + (time.cos().abs() * 25.0);
     }
 
     pub fn status_summary(&self) -> String {
@@ -49,6 +63,16 @@ impl JarviState {
             "MODE: {} | THREAT: {} | POWER: {:.1}% | TEMP: {:.1}C",
             self.system_mode, self.threat_level, self.power_consumption, self.core_temp
         )
+    }
+
+    pub fn get_status_emoji(&self) -> &'static str {
+        match self.system_mode.as_str() {
+            "OPERATIONAL" => "[+]",
+            "STANDBY" => "[-]",
+            "HIGH ALERT" => "[!]",
+            "MAINTENANCE" => "[~]",
+            _ => "[?]",
+        }
     }
 }
 
