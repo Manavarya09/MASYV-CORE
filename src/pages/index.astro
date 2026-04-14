@@ -20,55 +20,17 @@ import Layout from '../layouts/Layout.astro';
         </h1>
         <p class="hero-subtitle">A futuristic AI command system built with Rust and egui</p>
         <p class="hero-desc">
-          HELIOS is a professional GUI application featuring real-time system metrics, 
-          multi-provider AI integration, extensible plugin architecture, and a futuristic interface 
-          with 7 theme options.
+          HELIOS is a next-generation command interface combining real-time system metrics, 
+          multi-provider AI integration, and professional GUI design. Built for developers 
+          who demand performance and elegance.
         </p>
         <div class="hero-actions">
           <a href="https://github.com/Manavarya09/HELIOS" class="btn btn-primary">
-            <span class="btn-icon">+</span>
             Get Started
           </a>
           <a href="#features" class="btn btn-secondary">
             Explore Features
-            <span class="btn-arrow">-></span>
           </a>
-        </div>
-      </div>
-      
-      <!-- Hero Visual -->
-      <div class="hero-visual">
-        <div class="visual-frame">
-          <div class="frame-header">
-            <div class="frame-dots">
-              <span></span><span></span><span></span>
-            </div>
-            <span class="frame-title">HELIOS v0.8.0</span>
-          </div>
-          <div class="frame-body">
-            <div class="metrics-grid">
-              <div class="metric">
-                <span class="metric-label">CPU</span>
-                <div class="metric-bar"><div class="metric-fill" style="width: 23%"></div></div>
-                <span class="metric-value">23%</span>
-              </div>
-              <div class="metric">
-                <span class="metric-label">MEM</span>
-                <div class="metric-bar"><div class="metric-fill" style="width: 41%"></div></div>
-                <span class="metric-value">8.2GB</span>
-              </div>
-              <div class="metric">
-                <span class="metric-label">GPU</span>
-                <div class="metric-bar"><div class="metric-fill" style="width: 45%"></div></div>
-                <span class="metric-value">45%</span>
-              </div>
-              <div class="metric">
-                <span class="metric-label">DISK</span>
-                <div class="metric-bar"><div class="metric-fill" style="width: 67%"></div></div>
-                <span class="metric-value">67%</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -82,31 +44,43 @@ import Layout from '../layouts/Layout.astro';
       <div class="about-grid">
         <div class="about-card">
           <div class="about-icon">
-            <div class="icon-frame"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
           </div>
           <h3>Built with Rust</h3>
-          <p>Leveraging Rust's performance and safety for a lightning-fast, error-free experience. Native performance with memory safety guaranteed.</p>
+          <p>Leveraging Rust's performance and safety for a lightning-fast, error-free experience. Memory safety without garbage collection.</p>
         </div>
         <div class="about-card">
           <div class="about-icon">
-            <div class="icon-frame"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M3 9h18M9 21V9"/>
+            </svg>
           </div>
           <h3>egui Framework</h3>
-          <p>Powered by egui for immediate mode rendering. Smooth 60fps GUI with minimal overhead.</p>
+          <p>Powered by egui for immediate mode rendering. Smooth 60fps GUI with minimal overhead and maximum performance.</p>
         </div>
         <div class="about-card">
           <div class="about-icon">
-            <div class="icon-frame"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
           </div>
-          <h3>AI-Powered</h3>
-          <p>Integrate with Ollama, OpenAI, Anthropic, Claude, Gemini, or DeepSeek. Your AI assistant, your rules.</p>
+          <h3>AI Integration</h3>
+          <p>Connect with Ollama, OpenAI, Anthropic, Claude, Gemini, or DeepSeek. Your AI assistant, your choice of provider.</p>
         </div>
         <div class="about-card">
           <div class="about-icon">
-            <div class="icon-frame"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
           </div>
           <h3>Extensible</h3>
-          <p>Plugin system with hot-reload support. Extend functionality without restarting the application.</p>
+          <p>Plugin system architecture with hot-reload support. Extend functionality without restarting the app.</p>
         </div>
       </div>
     </section>
@@ -123,7 +97,7 @@ import Layout from '../layouts/Layout.astro';
             <div class="feature-num">01</div>
             <h3>AI Integration</h3>
           </div>
-          <p>Multi-provider support for Ollama, OpenAI, Anthropic, Claude, Gemini, and DeepSeek. Streaming responses with chat history.</p>
+          <p>Multi-provider support for Ollama, OpenAI, Anthropic, Claude, Gemini, and DeepSeek with streaming responses.</p>
           <div class="feature-tags">
             <span>Ollama</span>
             <span>OpenAI</span>
@@ -136,7 +110,7 @@ import Layout from '../layouts/Layout.astro';
             <div class="feature-num">02</div>
             <h3>Real-Time Metrics</h3>
           </div>
-          <p>CPU, Memory, Network, Power, GPU, and Disk monitoring with live graphs. Stay informed at a glance.</p>
+          <p>CPU, Memory, Network, Power, GPU, and Disk monitoring with live graphs and detailed breakdowns.</p>
           <div class="feature-tags">
             <span>CPU</span>
             <span>GPU</span>
@@ -174,7 +148,7 @@ import Layout from '../layouts/Layout.astro';
             <div class="feature-num">05</div>
             <h3>JARVIS Core</h3>
           </div>
-          <p>System status with encryption, shield, and integrity monitoring. Your digital assistant, secured.</p>
+          <p>System status with encryption, shield protection, and integrity monitoring.</p>
           <div class="feature-tags">
             <span>Encryption</span>
             <span>Shield</span>
@@ -198,7 +172,7 @@ import Layout from '../layouts/Layout.astro';
             <div class="feature-num">07</div>
             <h3>File Operations</h3>
           </div>
-          <p>Complete file management: ls, cd, pwd, read, write, mkdir, delete. Full shell integration.</p>
+          <p>Complete file management: ls, cd, pwd, read, write, mkdir, delete with full shell integration.</p>
           <div class="feature-tags">
             <span>Shell</span>
             <span>Files</span>
@@ -288,50 +262,29 @@ body { background: #000; color: #fff; font-family: system-ui, -apple-system, san
 .grid-bg { position: fixed; inset: 0; background-image: linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; z-index: 0; }
 
 /* Glow Effects */
-.glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.15; pointer-events: none; z-index: 1; }
-.glow-1 { width: 600px; height: 600px; background: #06b6d4; top: -200px; right: -200px; animation: float 20s ease-in-out infinite; }
-.glow-2 { width: 500px; height: 500px; background: #8b5cf6; bottom: -150px; left: -150px; animation: float 25s ease-in-out infinite reverse; }
-@keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, 30px); } }
+.glow { position: fixed; border-radius: 50%; filter: blur(150px); opacity: 0.12; pointer-events: none; z-index: 1; }
+.glow-1 { width: 800px; height: 800px; background: #06b6d4; top: -300px; right: -300px; animation: float 25s ease-in-out infinite; }
+.glow-2 { width: 600px; height: 600px; background: #8b5cf6; bottom: -200px; left: -200px; animation: float 30s ease-in-out infinite reverse; }
+@keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(50px, 50px); } }
 
 /* Hero Section */
-.hero { position: relative; z-index: 10; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; min-height: 100vh; padding: 4rem; max-width: 1400px; margin: 0 auto; }
-.hero-content { text-align: left; }
+.hero { position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 4rem; }
+.hero-content { max-width: 800px; text-align: center; }
 .badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-family: monospace; font-size: 0.875rem; color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 9999px; background: rgba(34, 211, 238, 0.05); margin-bottom: 2rem; }
 .badge-dot { width: 6px; height: 6px; background: #22d3ee; border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-.hero-title { font-size: 5rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 1.5rem; }
-.title-line { display: block; background: linear-gradient(135deg, #fff 0%, #22d3ee 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.hero-subtitle { font-size: 1.5rem; color: #9ca3af; margin-bottom: 1rem; }
-.hero-desc { font-size: 1rem; color: #6b7280; max-width: 500px; margin-bottom: 2rem; }
+.hero-title { font-size: 6rem; font-weight: 700; letter-spacing: -0.04em; margin-bottom: 1.5rem; line-height: 1.1; }
+.title-line { display: block; background: linear-gradient(135deg, #fff 0%, #22d3ee 50%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero-subtitle { font-size: 1.75rem; color: #9ca3af; margin-bottom: 1.5rem; font-weight: 300; }
+.hero-desc { font-size: 1.125rem; color: #6b7280; max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.7; }
 
-.hero-actions { display: flex; gap: 1rem; }
-.btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; border-radius: 0.5rem; transition: all 0.2s; }
+.hero-actions { display: flex; gap: 1rem; justify-content: center; }
+.btn { display: inline-flex; align-items: center; padding: 0.875rem 2rem; font-size: 1rem; font-weight: 600; text-decoration: none; border-radius: 0.5rem; transition: all 0.2s; }
 .btn-primary { background: #06b6d4; color: #000; }
-.btn-primary:hover { background: #22d3ee; transform: translateY(-2px); }
+.btn-primary:hover { background: #22d3ee; transform: translateY(-2px); box-shadow: 0 10px 40px rgba(6, 182, 212, 0.3); }
 .btn-secondary { border: 1px solid #374151; color: #fff; }
 .btn-secondary:hover { border-color: #4b5563; background: rgba(255,255,255,0.05); }
-.btn-icon { font-size: 1.25rem; }
-.btn-arrow { transition: transform 0.2s; }
-.btn-secondary:hover .btn-arrow { transform: translateX(4px); }
-
-/* Hero Visual */
-.hero-visual { display: flex; justify-content: center; }
-.visual-frame { width: 100%; max-width: 400px; border: 1px solid #1f2937; border-radius: 0.75rem; background: rgba(17, 24, 39, 0.8); overflow: hidden; }
-.frame-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: #111827; border-bottom: 1px solid #1f2937; }
-.frame-dots { display: flex; gap: 0.5rem; }
-.frame-dots span { width: 10px; height: 10px; border-radius: 50%; background: #374151; }
-.frame-dots span:first-child { background: #ef4444; }
-.frame-dots span:nth-child(2) { background: #eab308; }
-.frame-dots span:nth-child(3) { background: #22c55e; }
-.frame-title { font-size: 0.875rem; color: #6b7280; }
-.frame-body { padding: 1.5rem; }
-.metrics-grid { display: grid; gap: 1rem; }
-.metric { display: grid; grid-template-columns: 40px 1fr 50px; align-items: center; gap: 0.75rem; }
-.metric-label { font-size: 0.75rem; color: #6b7280; font-family: monospace; }
-.metric-bar { height: 8px; background: #1f2937; border-radius: 4px; overflow: hidden; }
-.metric-fill { height: 100%; background: linear-gradient(90deg, #06b6d4, #22d3ee); border-radius: 4px; }
-.metric-value { font-size: 0.875rem; color: #fff; font-family: monospace; text-align: right; }
 
 /* Section Header */
 .section-header { text-align: center; margin-bottom: 4rem; }
@@ -341,23 +294,22 @@ body { background: #000; color: #fff; font-family: system-ui, -apple-system, san
 /* About Section */
 .about { position: relative; z-index: 10; padding: 6rem 4rem; max-width: 1200px; margin: 0 auto; }
 .about-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
-.about-card { padding: 1.5rem; border: 1px solid #1f2937; border-radius: 0.75rem; background: rgba(17, 24, 39, 0.5); transition: all 0.3s; }
-.about-card:hover { border-color: #06b6d4; transform: translateY(-4px); }
-.about-icon { width: 48px; height: 48px; margin-bottom: 1rem; }
-.icon-frame { width: 48px; height: 48px; border: 2px solid #06b6d4; border-radius: 8px; position: relative; }
-.icon-frame::after { content: ''; position: absolute; inset: 8px; border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 4px; }
-.about-card h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; }
-.about-card p { font-size: 0.875rem; color: #6b7280; }
+.about-card { padding: 2rem; border: 1px solid #1f2937; border-radius: 0.75rem; background: rgba(17, 24, 39, 0.5); transition: all 0.3s; }
+.about-card:hover { border-color: #06b6d4; transform: translateY(-4px); background: rgba(17, 24, 39, 0.8); }
+.about-icon { width: 48px; height: 48px; margin-bottom: 1.25rem; color: #06b6d4; }
+.about-icon svg { width: 100%; height: 100%; }
+.about-card h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem; }
+.about-card p { font-size: 0.875rem; color: #6b7280; line-height: 1.6; }
 
 /* Features Section */
 .features { position: relative; z-index: 10; padding: 6rem 4rem; max-width: 1400px; margin: 0 auto; }
 .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
-.feature-card { padding: 1.5rem; border: 1px solid #1f2937; border-radius: 0.75rem; background: rgba(17, 24, 39, 0.5); transition: all 0.3s; }
+.feature-card { padding: 1.75rem; border: 1px solid #1f2937; border-radius: 0.75rem; background: rgba(17, 24, 39, 0.5); transition: all 0.3s; }
 .feature-card:hover { border-color: #06b6d4; }
 .feature-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
 .feature-num { font-size: 0.75rem; color: #06b6d4; font-family: monospace; }
 .feature-card h3 { font-size: 1.125rem; font-weight: 600; }
-.feature-card p { font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem; }
+.feature-card p { font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem; line-height: 1.6; }
 .feature-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .feature-tags span { font-size: 0.75rem; padding: 0.25rem 0.5rem; background: #1f2937; border-radius: 4px; color: #9ca3af; }
 
@@ -398,18 +350,14 @@ body { background: #000; color: #fff; font-family: system-ui, -apple-system, san
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .hero { grid-template-columns: 1fr; text-align: center; }
-  .hero-content { text-align: center; }
-  .hero-desc { margin: 0 auto 2rem; }
-  .hero-actions { justify-content: center; }
-  .hero-visual { display: none; }
+  .hero-title { font-size: 4rem; }
   .about-grid { grid-template-columns: repeat(2, 1fr); }
   .features-grid { grid-template-columns: repeat(2, 1fr); }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 640px) {
   .hero { padding: 2rem; }
   .hero-title { font-size: 3rem; }
+  .hero-subtitle { font-size: 1.25rem; }
   .about-grid { grid-template-columns: 1fr; }
   .features-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
